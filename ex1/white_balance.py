@@ -13,10 +13,11 @@ def sub(f_path, a_path):
     not_ignore = a_rgb > t1
     delta = f_rgb - a_rgb
     t2 = min_threshold(delta, 0.02)
-    not_ignore = not_ignore and delta > t2
+    not_ignore = not_ignore | delta > t2
     normed = a_rgb / delta
-    c = np.average(normed, where=not_ignore)
-    plt.imshow(normed)
+    c = np.average(normed, axis=(0, 1), weights=not_ignore)
+    output = a_rgb / c
+    plt.imshow(output)
     plt.show()
 
 
