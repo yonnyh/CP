@@ -4,20 +4,27 @@ import rawpy
 from skimage.color import rgb2xyz
 
 
-def sub(f_path, a_path):
-    f = rawpy.imread(f_path)
-    f_rgb = f.postprocess(no_auto_bright=True, use_auto_wb=False, gamma=None)
-    a = rawpy.imread(a_path)
-    a_rgb = a.postprocess(no_auto_bright=True, use_auto_wb=False, gamma=None)
-    t1 = min_threshold(a_rgb, 0.02)
-    not_ignore = a_rgb > t1
+def sub(f_path, a_path, debug=False):
+    if not debug:
+        f = rawpy.imread(f_path)
+        f_rgb = f.postprocess(no_auto_bright=True, use_auto_wb=False, gamma=None)
+        a = rawpy.imread(a_path)
+        a_rgb = a.postprocess(no_auto_bright=True, use_auto_wb=False, gamma=None)
+    else:
+        a_rgb = np.arange(60).reshape(4, 5, 3)
+        f_rgb = np.arange(60).reshape(4, 5, 3) / 2
     delta = f_rgb - a_rgb
-    t2 = min_threshold(delta, 0.02)
-    not_ignore = not_ignore | delta > t2
     normed = a_rgb / delta
+
+    t1 = min_threshold(a_rgb, 0.22)
+    not_ignore1 = a_rgb > t1
+    t2 = min_threshold(delta, 0.22)
+    not_ignore2 = delta > t2
+    not_ignore = (not_ignore1 & not_ignore2)
     c = np.average(normed, axis=(0, 1), weights=not_ignore)
+
     output = a_rgb / c
-    plt.imshow(output)
+    plt.imshow(normed)
     plt.show()
 
 
@@ -46,7 +53,7 @@ def find_chromaticity_coordinates(img_p):
 
 
 if __name__ == '__main__':
-    sub('input/withflash.CR2', 'input/noflash.CR2')
+    sub('input/withflash.CR2', 'input/noflash.CR2', debug=True)
 
     # img_path = 'input/graycard.CR2'
     # img_path = 'input-tiff/graycard.tiff'
