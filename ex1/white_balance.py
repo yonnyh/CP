@@ -32,7 +32,7 @@ def lms2xyz(img, transform_matrix):
 
 
 def rgb2lms(img, transform_matrix):
-    return xyz2lms(rgb2xyz(img, transform_matrix))
+    return xyz2lms(rgb2xyz(img), transform_matrix)
 
 
 def lms2rgb(img, transform_matrix):
@@ -51,6 +51,12 @@ def show_img(img, title=""):
     plt.imshow(img)
     plt.title(title)
     plt.show()
+
+
+def simple_wb(flash_img, no_flash_img, flash_chromatic):
+    delta = flash_img - no_flash_img
+    balanced_delta = delta / flash_chromatic
+    return no_flash_img + balanced_delta
 
 
 def wb(flash_img, no_flash_img, flash_chromatic):
@@ -92,18 +98,18 @@ def crop_image(img, left, right, top, bot):
 
 
 def gamma_corrections(img, gamma):
-    invGamma = 1.0 / gamma
-    return np.power(img, invGamma)
+    inv_gamma = 1.0 / gamma
+    return np.power(img, inv_gamma)
 
 
-def main(noflash_path, flash_path, gray_card_path):
+def main(noflash_path, flash_path, gray_card_path, wb_func=wb):
     no_flash_img = read_tiff(noflash_path)
     flash_img = read_tiff(flash_path)
     gray_card_img = read_tiff(gray_card_path)
     points_of_card = 686, 1842, 971, 2324  # for given images
     flash_cromatic = find_chromaticity_coordinates(gray_card_img, *points_of_card)
 
-    balanced = wb(flash_img, no_flash_img, flash_cromatic)
+    balanced = wb_func(flash_img, no_flash_img, flash_cromatic)
     return balanced
 
 
@@ -111,10 +117,16 @@ if __name__ == '__main__':
     noflash_path = 'input-tiff/noflash.tiff'
     flash_path = 'input-tiff/withflash.tiff'
     gray_card_path = 'input-tiff/graycard.tiff'
-    img = read_tiff(gray_card_path)
-    # balanced_img = main(noflash_path, flash_path, gray_card_path)
-    # show_img(balanced_img, "WB")
-    rgb = xyz2rgb(lms2xyz(xyz2lms(rgb2xyz(img), XYZ2LMS_VON_KRIES), XYZ2LMS_VON_KRIES))
-    plt.imshow(rgb)
-    plt.show()
-    # print("")
+
+    simple_balanced = main(noflash_path, flash_path, gray_card_path, wb_func=simple_wb)
+    show_img(simple_balanced, "simple WB")
+
+    gamma = 2.4
+    simple_gamma_corrected = gamma_corrections(simple_balanced, gamma=gamma)
+    show_img(simple_gamma_corrected, f"simple WB + gamma ({gamma})")
+
+    # balanced_img = main(noflash_path, flash_path, gray_card_path, wb_func=wb)
+    # show_img(balanced_img, "article WB")
+    #
+    # gamma_corrected = gamma_corrections(balanced_img, gamma=gamma)
+    # show_img(gamma_corrected, f"article WB + gamma ({gamma})")
