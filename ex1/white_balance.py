@@ -6,31 +6,29 @@ from skimage.io import imread
 from PIL import Image
 
 
-def sub(f_path, a_path, debug=False):
-    if not debug:
-        f = rawpy.imread(f_path)
-        f_rgb = f.postprocess(no_auto_bright=True, use_auto_wb=False, gamma=None)
-        a = rawpy.imread(a_path)
-        a_rgb = a.postprocess(no_auto_bright=True, use_auto_wb=False, gamma=None)
-    else:
-        d = np.zeros((4, 5, 3))
-        d[[0, 1, 2], [0, 1, 2]] = np.ones((3,))
-        f_rgb = np.arange(60).reshape(4, 5, 3) + d
-        a_rgb = np.arange(60).reshape(4, 5, 3)
-    delta = f_rgb - a_rgb
-    # plt.imshow(delta / np.array([134, 120, 127]))
-    # plt.show()
-    normed = np.divide(a_rgb, delta, where=delta > 0)
+def read_tiff(path):
+    """Read image in tiff format"""
+    img = imread(path)
+    img = img.astype(np.float) - np.min(img.astype(np.float))
+    img /= np.max(img)
+    return img
+
+
+def wb(f_image, a_image, flash_chromatic):
+    delta = f_image - a_image
+
+    # correct delta
+    normed = np.divide(a_image, delta, where=delta > 0)
 
     # compute values to ignore
-    t1 = min_threshold(a_rgb, 0.02)
-    not_ignore1 = a_rgb > t1
+    t1 = min_threshold(a_image, 0.02)
+    not_ignore1 = a_image > t1
     t2 = min_threshold(delta, 0.02)
     not_ignore2 = delta > t2
     not_ignore = (not_ignore1 & not_ignore2)
 
     c = np.average(normed, axis=(0, 1), weights=not_ignore)
-    output = a_rgb / c
+    output = a_image / c
     plt.imshow(output)
     plt.show()
 
@@ -78,9 +76,24 @@ def display_image(img):
     plt.show()
 
 
+def main(noflash_path, flash_path, gray_card_path):
+    no_flash = read_tiff(noflash_path)
+    flash = read_tiff(flash_path)
+    gray_card = read_tiff(gray_card_path)
+
+
 if __name__ == '__main__':
+    noflash_path = 'input-tiff/noflash.tiff'
+    flash_path = 'input-tiff/withflash.tiff'
+    gray_path = 'input-tiff/graycard.tiff'
+    # plt.imshow(a)
+    # plt.show()
+    # plt.imshow(f)
+    # plt.show()
+    # plt.imshow(delta)
+    # plt.show()
     # sub('input/withflash.CR2', 'input/noflash.CR2', debug=True)
-    sub('input/withflash.CR2', 'input/noflash.CR2', debug=False)
+    # sub('input/withflash.CR2', 'input/noflash.CR2', debug=False)
 
     # img_path = 'input/graycard.CR2'
     # img_path = 'input-tiff/graycard.tiff'
