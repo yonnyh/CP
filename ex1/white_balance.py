@@ -1,7 +1,33 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from skimage.color import rgb2xyz
+from skimage.color import rgb2xyz, xyz2rgb
 from skimage.io import imread
+
+
+
+XYZ2LMS_VON_KRIES = np.array([[ 0.4002400,  0.7076000, -0.0808100],
+                              [-0.2263000,  1.1653200,  0.0457000],
+                              [ 0.0000000,  0.0000000,  0.9182200]], dtype=np.float)
+
+XYZ2LMS_BRADFORD = np.array([[ 0.8951000,  0.2664000, -0.1614000],
+                             [-0.7502000,  1.7135000,  0.0367000],
+                             [ 0.0389000, -0.0685000,  1.0296000]], dtype=np.float)
+
+XYZ2LMS_HUNT_POINTER_ESTEVEZ = np.array([[ 0.3897,  0.6889 , -0.0786],
+                                        [-0.2298,  1.1834,   0.0464],
+                                        [ 0.0, 0.0,  1.0]], dtype=np.float)
+
+
+def xyz2lms(img, transform_matrix):
+    shape_of_img = img.shape
+    reshaped_img = img.transpose(2, 0, 1).reshape(3, -1)
+    lms_img = np.dot(transform_matrix, reshaped_img)
+    img = img.reshape(shape_of_img)
+    return
+
+
+def lms2xyz(img):
+    pass
 
 
 def read_tiff(path):
@@ -66,6 +92,11 @@ def find_chromaticity_coordinates(img_p, left, right, top, bot):
 def crop_image(img, left, right, top, bot):
     grey_card = img[top:bot, left:right]
     return grey_card
+
+
+def gamma_corrections(img, gamma):
+    invGamma = 1.0 / gamma
+    return np.power(img, invGamma)
 
 
 def main(noflash_path, flash_path, gray_card_path):
