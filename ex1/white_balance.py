@@ -4,7 +4,6 @@ from skimage.color import rgb2xyz, xyz2rgb
 from skimage.io import imread
 
 
-
 XYZ2LMS_VON_KRIES = np.array([[ 0.4002400,  0.7076000, -0.0808100],
                               [-0.2263000,  1.1653200,  0.0457000],
                               [ 0.0000000,  0.0000000,  0.9182200]], dtype=np.float)
@@ -19,15 +18,25 @@ XYZ2LMS_HUNT_POINTER_ESTEVEZ = np.array([[ 0.3897,  0.6889 , -0.0786],
 
 
 def xyz2lms(img, transform_matrix):
-    shape_of_img = img.shape
+    x, y, z = img.shape
     reshaped_img = img.transpose(2, 0, 1).reshape(3, -1)
     lms_img = np.dot(transform_matrix, reshaped_img)
-    img = img.reshape(shape_of_img)
-    return
+    return lms_img.reshape(z, x, y).transpose(1, 2, 0)
 
 
-def lms2xyz(img):
-    pass
+def lms2xyz(img, transform_matrix):
+    l, m, s = img.shape
+    reshaped_img = img.transpose(2, 0, 1).reshape(3, -1)
+    xyz_img = np.dot(np.linalg.inv(transform_matrix), reshaped_img)
+    return xyz_img.reshape(s, l, m).transpose(1, 2, 0)
+
+
+def rgb2lms(img, transform_matrix):
+    return xyz2lms(rgb2xyz(img, transform_matrix))
+
+
+def lms2rgb(img, transform_matrix):
+    return xyz2rgb(lms2xyz(img, transform_matrix))
 
 
 def read_tiff(path):
@@ -75,18 +84,6 @@ def min_threshold(rgb_img, percentage: float):
 def find_chromaticity_coordinates(img_p, left, right, top, bot):
     img = crop_image(img_p, left, right, top, bot)
     return np.max(img.transpose(2, 0, 1).reshape(3, -1), axis=1)
-    # raw = rawpy.imread(img_p)
-    # rgb = raw.postprocess(no_auto_bright=True, use_auto_wb=False, gamma=None)
-    # x, y, z = rgb.shape
-    # xyz = rgb2xyz(rgb)
-    # xyz2lms = np.array([[0.3897,    0.6889,     -0.0786],
-    #                     [-0.2298,   1.1834,     0.0464],
-    #                     [0.0,       0.0,        1.0]])
-    # xyz_reshaped = xyz.transpose(2, 0, 1).reshape(3, -1)
-    # lms_reshaped = xyz2lms @ xyz_reshaped
-    # lms = lms_reshaped.reshape(z, x, y).transpose(1, 2, 0)
-    #
-    # print()
 
 
 def crop_image(img, left, right, top, bot):
@@ -114,5 +111,10 @@ if __name__ == '__main__':
     noflash_path = 'input-tiff/noflash.tiff'
     flash_path = 'input-tiff/withflash.tiff'
     gray_card_path = 'input-tiff/graycard.tiff'
-    balanced_img = main(noflash_path, flash_path, gray_card_path)
-    show_img(balanced_img, "WB")
+    img = read_tiff(gray_card_path)
+    # balanced_img = main(noflash_path, flash_path, gray_card_path)
+    # show_img(balanced_img, "WB")
+    rgb = xyz2rgb(lms2xyz(xyz2lms(rgb2xyz(img), XYZ2LMS_VON_KRIES), XYZ2LMS_VON_KRIES))
+    plt.imshow(rgb)
+    plt.show()
+    # print("")
