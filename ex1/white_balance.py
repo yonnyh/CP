@@ -12,9 +12,9 @@ XYZ2LMS_BRADFORD = np.array([[ 0.8951000,  0.2664000, -0.1614000],
                              [-0.7502000,  1.7135000,  0.0367000],
                              [ 0.0389000, -0.0685000,  1.0296000]], dtype=np.float)
 
-XYZ2LMS_HUNT_POINTER_ESTEVEZ = np.array([[ 0.3897,  0.6889 , -0.0786],
+XYZ2LMS_HUNT_POINTER_ESTEVEZ = np.array([[0.3897,  0.6889, -0.0786],
                                         [-0.2298,  1.1834,   0.0464],
-                                        [ 0.0, 0.0,  1.0]], dtype=np.float)
+                                        [0.0, 0.0,  1.0]], dtype=np.float)
 
 
 def xyz2lms(img, transform_matrix):
@@ -28,7 +28,6 @@ def lms2xyz(img, transform_matrix):
     l, m, s = img.shape
     reshaped_img = img.transpose(2, 0, 1).reshape(3, -1)
     xyz_img = np.matmul(np.linalg.inv(transform_matrix), reshaped_img)
-    # xyz_img = np.matmul(transform_matrix, reshaped_img)
     return xyz_img.reshape(s, l, m).transpose(1, 2, 0)
 
 
@@ -49,7 +48,7 @@ def read_tiff(path):
 
 
 def show_img(img, title=""):
-    plt.imshow(img)
+    plt.imshow((img*255).astype(np.uint8))
     plt.title(title)
     plt.show()
 
@@ -95,8 +94,9 @@ def min_threshold(rgb_img, percentage: float):
 
 def find_chromaticity_coordinates(img_p, left, right, top, bot):
     img = crop_image(img_p, left, right, top, bot)
-    return np.max(img.transpose(2, 0, 1).reshape(3, -1), axis=1)
-
+    chromaticity_coordinates = np.sum(img.transpose(2, 0, 1).reshape(3, -1), axis=1, dtype=np.float)
+    # return np.max(img.transpose(2, 0, 1).reshape(3, -1), axis=1)
+    return chromaticity_coordinates/np.sum(chromaticity_coordinates, dtype=np.float)
 
 def crop_image(img, left, right, top, bot):
     grey_card = img[top:bot, left:right]
@@ -115,7 +115,8 @@ def main(noflash_path, flash_path, gray_card_path, wb_func=wb, lms_mat=None):
     points_of_card = 686, 1842, 971, 2324  # for given images
     flash_cromatic = find_chromaticity_coordinates(gray_card_img, *points_of_card)
 
-    balanced = wb_func(flash_img, no_flash_img, flash_cromatic, lms_mat)
+    # balanced = wb_func(flash_img, no_flash_img, flash_cromatic, lms_mat)
+    balanced = wb_func(flash_img, no_flash_img, flash_cromatic)
     return balanced
 
 
@@ -131,9 +132,24 @@ if __name__ == '__main__':
     # simple_gamma_corrected = gamma_corrections(simple_balanced, gamma=gamma)
     # show_img(simple_gamma_corrected, f"simple WB + gamma ({gamma})")
     #
-    balanced_img = main(noflash_path, flash_path, gray_card_path, wb_func=wb,
-                        lms_mat=np.eye(3, dtype=np.float))
-    show_img(balanced_img, "article WB")
+    # balanced_img = main(noflash_path, flash_path, gray_card_path, wb_func=wb,
+    #                     lms_mat=np.eye(3, dtype=np.float))
+    # balanced_img = main(noflash_path, flash_path, gray_card_path, wb_func=wb,
+    #                     lms_mat=None)
+    balanced_img = main(noflash_path, flash_path, gray_card_path, wb_func=simple_wb, lms_mat=None)
+    show_img(gamma_corrections(balanced_img, 2.4), "wb")
+    # flash_img = read_tiff(flash_path)
+    # show_img(flash_img, "flash image")
+    # no_flash_img = read_tiff(noflash_path)
+    # show_img(no_flash_img, "no_flash image")
+
 
     # gamma_corrected = gamma_corrections(balanced_img, gamma=gamma)
     # show_img(gamma_corrected, f"article WB + gamma ({gamma})")
+    # img = read_tiff(noflash_path)
+    # balanced_img = main(noflash_path, flash_path, gray_card_path)
+    # show_img(balanced_img, "WB")
+    # rgb = xyz2rgb(lms2xyz(xyz2lms(rgb2xyz(img), XYZ2LMS_VON_KRIES), XYZ2LMS_VON_KRIES))
+    # plt.imshow(gamma_corrections(rgb, 2.4))
+    # plt.show()
+    # print("")
