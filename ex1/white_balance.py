@@ -53,13 +53,17 @@ def show_img(img, title=""):
     plt.show()
 
 
-def simple_wb(flash_img, no_flash_img, flash_chromatic):
-    delta = flash_img - no_flash_img
+def simple_wb(flash_img, no_flash_img, flash_chromatic, lms_mat):
+    lms_flash_img = rgb2lms(flash_img, lms_mat)
+    lms_no_flash_img = rgb2lms(no_flash_img, lms_mat)
+    delta = lms_flash_img - lms_no_flash_img
+    # flash_chromatic_day = np.array([0.9504, 1.0, 1.0889])[np.newaxis][np.newaxis]
+    # balanced_delta = lms_no_flash_img @ (np.eye(3) * (1 /flash_chromatic_day))
     balanced_delta = delta @ (np.eye(3) * (1 /flash_chromatic))
-    return balanced_delta + no_flash_img
+    return lms2rgb(balanced_delta, lms_mat)
 
 
-def wb(flash_img, no_flash_img, flash_chromatic, lms_mat=None):
+def wb(flash_img, no_flash_img, flash_chromatic, lms_mat):
     # Article addition: divide by c (mean of no_flash_img / delta) instead of
     # directly by flash_chromatic
     if np.any(lms_mat):
@@ -70,9 +74,9 @@ def wb(flash_img, no_flash_img, flash_chromatic, lms_mat=None):
     normed = np.divide(no_flash_img, balanced_delta, where=delta > 0)
 
     # compute extreme values to ignore
-    t1 = np.percentile(no_flash_img, 2)
+    t1 = np.percentile(no_flash_img, 2, axis=(0, 1))
     not_ignore1 = no_flash_img > t1
-    t2 = np.percentile(delta, 2)
+    t2 = np.percentile(delta, 2, axis=(0, 1))
     not_ignore2 = delta > t2
     not_ignore = (not_ignore1 & not_ignore2)
 
@@ -94,24 +98,14 @@ def hist(img, title):
     plt.title(title)
     plt.show()
 
-# def min_threshold(rgb_img, percentage: float):
-#     reshaped = rgb_img.transpose(2, 0, 1).reshape(3, -1)
-#     num_of_wanted_pics = int(reshaped.shape[1] * percentage)
-#     r = np.max(np.partition(reshaped[0], num_of_wanted_pics)[:num_of_wanted_pics])
-#     g = np.max(np.partition(reshaped[1], num_of_wanted_pics)[:num_of_wanted_pics])
-#     b = np.max(np.partition(reshaped[2], num_of_wanted_pics)[:num_of_wanted_pics])
-#     return np.array([r, g, b])
-
 
 def find_chromaticity_coordinates(img_p, left, right, top, bot, lms_mat):
     img = crop_image(img_p, left, right, top, bot)
-    # chromaticity_coordinates = np.sum(img.transpose(2, 0, 1).reshape(3, -1), axis=1, dtype=np.float)
     lms_img = rgb2lms(img, lms_mat)
-    avg_lms = np.mean(lms_img.transpose(2, 0, 1).reshape(3, -1), axis=1)
+    avg_lms = np.mean(lms_img, axis=(0, 1))
     chromaticity = avg_lms / np.sum(avg_lms)
     return lms2rgb(chromaticity[np.newaxis][np.newaxis], lms_mat)[0, 0]
-    # return np.max(img.transpose(2, 0, 1).reshape(3, -1), axis=1)
-    # return chromaticity_coordinates/np.sum(chromaticity_coordinates, dtype=np.float)
+
 
 def crop_image(img, left, right, top, bot):
     grey_card = img[top:bot, left:right]
@@ -125,12 +119,13 @@ def gamma_corrections(img, gamma):
 
 def main(noflash_path, flash_path, gray_card_path, lms_mat, wb_func=wb):
     no_flash_img = read_tiff(noflash_path)
+    # show_img(no_flash_img / np.max(no_flash_img, axis=(0,1)))
     flash_img = read_tiff(flash_path)
     gray_card_img = read_tiff(gray_card_path)
     points_of_card = 686, 1842, 971, 2324  # for given images
     flash_cromatic = find_chromaticity_coordinates(gray_card_img, *points_of_card, lms_mat)
 
-    balanced = wb_func(flash_img, no_flash_img, flash_cromatic)
+    balanced = wb_func(flash_img, no_flash_img, flash_cromatic, lms_mat)
     return balanced
 
 
@@ -150,13 +145,14 @@ if __name__ == '__main__':
     #                     lms_mat=np.eye(3, dtype=np.float))
     # balanced_img = main(noflash_path, flash_path, gray_card_path, wb_func=wb,
     #                     lms_mat=None)
-    balanced_img_yoni = main(noflash_path, flash_path, gray_card_path, XYZ2LMS_VON_KRIES, wb_func=wb)
-    hist(balanced_img_yoni, "avichai_ wb")
-    # show_img(balanced_img, "avichai_ wb")
+    balanced_img = main(noflash_path, flash_path, gray_card_path, XYZ2LMS_VON_KRIES, wb_func=simple_wb)
+    show_img(gamma_corrections(balanced_img, 2.4), "Simple white balance for flash image with gama correction"
+                                                   "correction,\n Use LMS VON KRIES matrix to transfer to "
+                                                   "lms")
     # flash_img = read_tiff(flash_path)
     # show_img(flash_img, "flash image")
     # no_flash_img = read_tiff(noflash_path)
-    # show_img(no_flash_img, "no_flash image")
+    # show_img(no_flash_img, "Original no flash image")
 
 
     # gamma_corrected = gamma_corrections(balanced_img, gamma=gamma)
