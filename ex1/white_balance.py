@@ -66,9 +66,7 @@ def simple_wb(flash_img, no_flash_img, flash_chromatic, lms_mat, is_flash):
 def wb(flash_img, no_flash_img, flash_chromatic, lms_mat, is_flash):
     # Article addition: divide by c (mean of no_flash_img / delta) instead of
     # directly by flash_chromatic
-    if np.any(lms_mat):
-        flash_img = rgb2lms(flash_img, lms_mat)
-        no_flash_img = rgb2lms(no_flash_img, lms_mat)
+
     delta = flash_img - no_flash_img
     balanced_delta = delta / flash_chromatic
     normed = np.divide(no_flash_img, balanced_delta, where=delta > 0)
@@ -82,8 +80,6 @@ def wb(flash_img, no_flash_img, flash_chromatic, lms_mat, is_flash):
 
     c = np.average(normed, axis=(0, 1), weights=not_ignore)
     output = no_flash_img / c
-    if np.any(lms_mat):
-        return lms2rgb(output, lms_mat)
     return output
 
 
@@ -132,7 +128,7 @@ def main(noflash_path, flash_path, gray_card_path, lms_mat, transfer_to_lms, is_
     return balanced
 
 
-def show_result(algo, is_flash):
+def show_result(algo, is_flash, name_algo):
     if is_flash:
         image_mode = "flash"
     else:
@@ -147,20 +143,22 @@ def show_result(algo, is_flash):
             if is_transfer_to_lms:
                 balanced_img = main(noflash_path, flash_path, gray_card_path, tran_matrix,
                                     is_transfer_to_lms, is_flash, algo)
-                show_img(gamma_corrections(balanced_img, 2.4), "Simple white balance for "+image_mode+" image "
+                show_img(gamma_corrections(balanced_img, 2.4), name_algo+" white balance for "
+                                                                         ""+image_mode+" image "
                                                                "with gama correction correction\n Use " +trar_name+" matrix to transfer to lms")
             else:
                 balanced_img = main(noflash_path, flash_path, gray_card_path, tran_matrix,
                                     is_transfer_to_lms, is_flash, algo)
                 show_img(gamma_corrections(balanced_img, 2.4),
-                         "Simple white balance for "+ image_mode +" image with gama correction \n Use "
+                         name_algo+" white balance for "+ image_mode +" image with gama correction \n Use "
                          +trar_name+" matrix to transfer to lms only for chromaticity")
 
 if __name__ == '__main__':
     noflash_path = 'input-tiff/noflash.tiff'
     flash_path = 'input-tiff/withflash.tiff'
     gray_card_path = 'input-tiff/graycard.tiff'
-    show_result(simple_wb, False)
+    # show_result(simple_wb, False, "simple")
+    show_result(wb, False, "Our")
     # simple_balanced = main(noflash_path, flash_path, gray_card_path, wb_func=simple_wb)
     # show_img(simple_balanced, "simple WB")
     #
