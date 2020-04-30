@@ -48,15 +48,15 @@ def read_tiff(path):
 
 
 def show_img(img, title=""):
-    plt.imshow((img*255).astype(np.uint8))
+    plt.imshow(np.clip(img, 0, 1))
     plt.title(title)
     plt.show()
 
 
 def simple_wb(flash_img, no_flash_img, flash_chromatic):
     delta = flash_img - no_flash_img
-    balanced_delta = delta / flash_chromatic
-    return no_flash_img + balanced_delta
+    balanced_delta = delta @ (np.eye(3) * (1 /flash_chromatic))
+    return balanced_delta + no_flash_img
 
 
 def wb(flash_img, no_flash_img, flash_chromatic, lms_mat=None):
@@ -70,9 +70,9 @@ def wb(flash_img, no_flash_img, flash_chromatic, lms_mat=None):
     normed = np.divide(no_flash_img, balanced_delta, where=delta > 0)
 
     # compute extreme values to ignore
-    t1 = min_threshold(no_flash_img, 0.02)
+    t1 = np.percentile(no_flash_img, 2)
     not_ignore1 = no_flash_img > t1
-    t2 = min_threshold(delta, 0.02)
+    t2 = np.percentile(delta, 2)
     not_ignore2 = delta > t2
     not_ignore = (not_ignore1 & not_ignore2)
 
@@ -83,20 +83,35 @@ def wb(flash_img, no_flash_img, flash_chromatic, lms_mat=None):
     return output
 
 
-def min_threshold(rgb_img, percentage: float):
-    reshaped = rgb_img.transpose(2, 0, 1).reshape(3, -1)
-    num_of_wanted_pics = int(reshaped.shape[1] * percentage)
-    r = np.max(np.partition(reshaped[0], num_of_wanted_pics)[:num_of_wanted_pics])
-    g = np.max(np.partition(reshaped[1], num_of_wanted_pics)[:num_of_wanted_pics])
-    b = np.max(np.partition(reshaped[2], num_of_wanted_pics)[:num_of_wanted_pics])
-    return np.array([r, g, b])
+def hist(img, title):
+    plt.hist(img.ravel(), bins=256, color='orange', )
+    plt.hist(img[:, :, 0].ravel(), bins=256, color='red', alpha=0.5)
+    plt.hist(img[:, :, 1].ravel(), bins=256, color='Green', alpha=0.5)
+    plt.hist(img[:, :, 2].ravel(), bins=256, color='Blue', alpha=0.5)
+    plt.xlabel('Intensity Value')
+    plt.ylabel('Count')
+    plt.legend(['Total', 'Red_Channel', 'Green_Channel', 'Blue_Channel'])
+    plt.title(title)
+    plt.show()
+
+# def min_threshold(rgb_img, percentage: float):
+#     reshaped = rgb_img.transpose(2, 0, 1).reshape(3, -1)
+#     num_of_wanted_pics = int(reshaped.shape[1] * percentage)
+#     r = np.max(np.partition(reshaped[0], num_of_wanted_pics)[:num_of_wanted_pics])
+#     g = np.max(np.partition(reshaped[1], num_of_wanted_pics)[:num_of_wanted_pics])
+#     b = np.max(np.partition(reshaped[2], num_of_wanted_pics)[:num_of_wanted_pics])
+#     return np.array([r, g, b])
 
 
-def find_chromaticity_coordinates(img_p, left, right, top, bot):
+def find_chromaticity_coordinates(img_p, left, right, top, bot, lms_mat):
     img = crop_image(img_p, left, right, top, bot)
-    chromaticity_coordinates = np.sum(img.transpose(2, 0, 1).reshape(3, -1), axis=1, dtype=np.float)
+    # chromaticity_coordinates = np.sum(img.transpose(2, 0, 1).reshape(3, -1), axis=1, dtype=np.float)
+    lms_img = rgb2lms(img, lms_mat)
+    avg_lms = np.mean(lms_img.transpose(2, 0, 1).reshape(3, -1), axis=1)
+    chromaticity = avg_lms / np.sum(avg_lms)
+    return lms2rgb(chromaticity[np.newaxis][np.newaxis], lms_mat)[0, 0]
     # return np.max(img.transpose(2, 0, 1).reshape(3, -1), axis=1)
-    return chromaticity_coordinates/np.sum(chromaticity_coordinates, dtype=np.float)
+    # return chromaticity_coordinates/np.sum(chromaticity_coordinates, dtype=np.float)
 
 def crop_image(img, left, right, top, bot):
     grey_card = img[top:bot, left:right]
@@ -108,14 +123,13 @@ def gamma_corrections(img, gamma):
     return np.power(img, inv_gamma)
 
 
-def main(noflash_path, flash_path, gray_card_path, wb_func=wb, lms_mat=None):
+def main(noflash_path, flash_path, gray_card_path, lms_mat, wb_func=wb):
     no_flash_img = read_tiff(noflash_path)
     flash_img = read_tiff(flash_path)
     gray_card_img = read_tiff(gray_card_path)
     points_of_card = 686, 1842, 971, 2324  # for given images
-    flash_cromatic = find_chromaticity_coordinates(gray_card_img, *points_of_card)
+    flash_cromatic = find_chromaticity_coordinates(gray_card_img, *points_of_card, lms_mat)
 
-    # balanced = wb_func(flash_img, no_flash_img, flash_cromatic, lms_mat)
     balanced = wb_func(flash_img, no_flash_img, flash_cromatic)
     return balanced
 
@@ -136,8 +150,9 @@ if __name__ == '__main__':
     #                     lms_mat=np.eye(3, dtype=np.float))
     # balanced_img = main(noflash_path, flash_path, gray_card_path, wb_func=wb,
     #                     lms_mat=None)
-    balanced_img = main(noflash_path, flash_path, gray_card_path, wb_func=simple_wb, lms_mat=None)
-    show_img(gamma_corrections(balanced_img, 2.4), "wb")
+    balanced_img_yoni = main(noflash_path, flash_path, gray_card_path, XYZ2LMS_VON_KRIES, wb_func=wb)
+    hist(balanced_img_yoni, "avichai_ wb")
+    # show_img(balanced_img, "avichai_ wb")
     # flash_img = read_tiff(flash_path)
     # show_img(flash_img, "flash image")
     # no_flash_img = read_tiff(noflash_path)
