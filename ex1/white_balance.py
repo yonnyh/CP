@@ -128,7 +128,7 @@ def main(noflash_path, flash_path, gray_card_path, lms_mat, transfer_to_lms, is_
     return balanced
 
 
-def show_result(algo, is_flash, name_algo):
+def show_result(algo, is_flash, name_algo, noflash_path, flash_path, gray_card_path):
     if is_flash:
         image_mode = "flash"
     else:
@@ -157,33 +157,7 @@ if __name__ == '__main__':
     noflash_path = 'input-tiff/noflash.tiff'
     flash_path = 'input-tiff/withflash.tiff'
     gray_card_path = 'input-tiff/graycard.tiff'
-    # show_result(simple_wb, False, "simple")
-    show_result(wb, False, "Our")
-    # simple_balanced = main(noflash_path, flash_path, gray_card_path, wb_func=simple_wb)
-    # show_img(simple_balanced, "simple WB")
-    #
-    # gamma = 2.4
-    # simple_gamma_corrected = gamma_corrections(simple_balanced, gamma=gamma)
-    # show_img(simple_gamma_corrected, f"simple WB + gamma ({gamma})")
-    #
-    # balanced_img = main(noflash_path, flash_path, gray_card_path, wb_func=wb,
-    #                     lms_mat=np.eye(3, dtype=np.float))
-    # balanced_img = main(noflash_path, flash_path, gray_card_path, wb_func=wb,
-    #                     lms_mat=None)
+    # show_result(simple_wb, False, "simple", noflash_path, flash_path, gray_card_path)
+    # show_result(simple_wb, True, "simple", noflash_path, flash_path, gray_card_path)
+    show_result(wb, False, "Our", noflash_path, flash_path, gray_card_path)
 
-
-    # flash_img = read_tiff(flash_path)
-    # show_img(flash_img, "flash image")
-    # no_flash_img = read_tiff(noflash_path)
-    # show_img(no_flash_img, "Original no flash image")
-
-
-    # gamma_corrected = gamma_corrections(balanced_img, gamma=gamma)
-    # show_img(gamma_corrected, f"article WB + gamma ({gamma})")
-    # img = read_tiff(noflash_path)
-    # balanced_img = main(noflash_path, flash_path, gray_card_path)
-    # show_img(balanced_img, "WB")
-    # rgb = xyz2rgb(lms2xyz(xyz2lms(rgb2xyz(img), XYZ2LMS_VON_KRIES), XYZ2LMS_VON_KRIES))
-    # plt.imshow(gamma_corrections(rgb, 2.4))
-    # plt.show()
-    # print("")
