@@ -1,0 +1,886 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass heb-article
+\use_default_options true
+\maintain_unincluded_children false
+\language hebrew
+\language_package babel
+\inputencoding cp1255
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2cm
+\topmargin 2cm
+\rightmargin 2cm
+\bottommargin 3cm
+\headheight 2cm
+\headsep 2cm
+\footskip 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language swedish
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+צילום חישובי, תרגיל
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\numeric on
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+1
+\end_layout
+
+\begin_layout Author
+אביחי חיימי )
+\numeric on
+305761637
+\numeric off
+(, יהונתן המר )
+\numeric on
+203536651
+\numeric off
+(
+\end_layout
+
+\begin_layout Section
+מציאת הכרומטיות של הפלאש
+\end_layout
+
+\begin_layout Standard
+נרצה לקבל את היחס בין ערוצי הצבע שמשקף את הכרומטיות של תיאורת הפלאש.
+ ביצענו את הפעולות הבאות:
+\end_layout
+
+\begin_layout Itemize
+את תמונת הכרטיס האפור חתכנו כך שתכיל רק פיקסלים אפורים )ללא השוליים(.
+\end_layout
+
+\begin_layout Itemize
+העברנו את הכרטיס למרחב הצבע
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\lang hebrew
+.
+\end_layout
+
+\begin_layout Itemize
+ביצענו ממוצע עבור כל הפיקסלים לכל ערוץ בנפרד.
+\end_layout
+
+\begin_layout Itemize
+את התוצאה נרמלנו ל-
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\numeric on
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+1
+\numeric off
+.
+ 
+\end_layout
+
+\begin_layout Section
+חישוב
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+white balancing
+\end_layout
+
+\begin_layout Subsection
+המודל הפשוט
+\end_layout
+
+\begin_layout Itemize
+נרצה שהתמונה בפלט תשקף את האלבדו )מקדם החזרה( המקורי של הסצינה ככל שניתן,
+ ותסנן את השפעות התיאורה )הטבעית ושל הפלאש( שבתמונת הקלט.
+ כך נצפה שקירות יקבלו צבע לבן, ולא בגווני הצהוב.
+\end_layout
+
+\begin_layout Itemize
+נשתמש במודל הצבע שעל פיו כל קואורדינטת צבע בטווח של 
+\begin_inset Formula $\left[0,1\right]$
+\end_inset
+
+, וכל פיקסל 
+\begin_inset Formula $I$
+\end_inset
+
+ מתואר ע"י מכפלת האלבדו 
+\begin_inset Formula $R$
+\end_inset
+
+ של האובייקט הנצפה עם אופי התאורה 
+\begin_inset Formula $L$
+\end_inset
+
+ שמוטלת עליו, בתוספת גורם משקול שמושפע מאופי הסצינה: 
+\begin_inset Formula $I=RkL$
+\end_inset
+
+.
+ תמונה שנלקחת עם פלאש משמרת את האלבדו, שהרי הזירה המצולמת לא משתנה, אך התיאורה
+ שונה וכן המישקול הנובע מהיחסים הפנימיים בין הצבעים השונים בתוך הסצינה הוא
+ אחר.
+ על כן נניח שכל פיקסל מקיים את המשוואה הבאה:
+\begin_inset Formula 
+\[
+I_{both}=R\left(k_{1}L_{1}+k_{2}L_{2}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+במקרה שלנו, בו נתונה לנו התיאורה המקורית 
+\begin_inset Formula $I_{1}=Rk_{1}L_{1}$
+\end_inset
+
+ נוכל השיג את האופי של הפלאש עצמו ע"י חיסור פשוט בין התמונות:
+\begin_inset Formula 
+\[
+I_{2}=I_{both}-I_{1}=Rk_{2}L_{2}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+ע"י שימוש בטכניקת הכרטיס האפור אנו מניחים שיש בידנו את 
+\begin_inset Formula $L_{2}$
+\end_inset
+
+, וכך ע"י חלוקה פשוטה נוכל לקבל את 
+\begin_inset Formula $Rk_{2}$
+\end_inset
+
+.
+ חלוקה של התמונה ללא הפלאש בתוצאה שקיבלנו תתן 
+\begin_inset Formula $\frac{k_{1}}{k_{2}}L_{1}$
+\end_inset
+
+.
+ כלומר, הצלחנו להפטר מתוספת האור )הצהובה-כתומה משהו( של הפלאש, ומה שהשתנה
+ הוא רק היחסים הפנימיים בתוך התמונה.
+\end_layout
+
+\begin_layout Itemize
+חלוקה של התמונה ללא הפלאש בתוצאה הנ"ל תתן:
+\begin_inset Formula 
+\[
+\frac{Rk_{1}L_{1}}{\frac{k_{1}}{k_{2}}L_{1}}=Rk_{2}
+\]
+
+\end_inset
+
+קרי, הצלחנו לבודד את 
+\begin_inset Formula $R$
+\end_inset
+
+ מהשפעות התיאורה הישירות, והוא מושפע מיחסי התיאורה הממושקלים של הפלאש.
+ לא אידיאלי, אבל טוב דיו.
+\end_layout
+
+\begin_layout Subsection
+שיפורים ומגבלות
+\end_layout
+
+\begin_layout Subsubsection
+כללי
+\end_layout
+
+\begin_layout Itemize
+רכיב 
+\begin_inset Formula $k_{2}$
+\end_inset
+
+ משפיע בוודאי על התוצר, וכנראה שיותר מאשר 
+\begin_inset Formula $k_{1}$
+\end_inset
+
+: בגלל שפלאש הוא תאורה ישירה, נוצרים מעברי תאורה חדים בין איזורים מוארים
+ ואיזורים מוצלים.
+ זאת ועוד: נוצרות הבהקות מקומיות, כך שהנגזרת של התמונה באיזורים מסוימים
+ היא גבוהה מאוד.
+ כל זאת גורם לכך ש- 
+\begin_inset Formula $k_{2}$
+\end_inset
+
+ משפיע מאוד על התמונה באיזורים מסוימים, ואת ההשפעה הזו נשאף לצמצם כדי להעצים
+ את הרובסטיות של השיטה.
+\end_layout
+
+\begin_layout Itemize
+השתמשנו לשם כך בשתי פעולות:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ערכים חריגים )שערכם נמצא בשני האחוזונים התחתונים עבור כל רכיב צבע( הסרנו.
+\end_layout
+
+\begin_layout Itemize
+הפעלנו ממוצע על כלל הערכים במכנה 
+\begin_inset Formula $\text{mean}\left(\frac{k_{1}}{k_{2}}L_{1}\right)$
+\end_inset
+
+ לפני שחילקנו בו.
+\end_layout
+
+\end_deeper
+\begin_layout Subsubsection
+מרחב
+\family roman
+\series bold
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\end_layout
+
+\begin_layout Itemize
+מלבד השימוש ב-
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+לשם השגת הכרומטיות של הפלאש )כפי שנלמד בכיתה(, לא ראינו ייתרון למעבר למרחב
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\lang hebrew
+.
+ למעשה, ההיפך הוא הנכון: הקיר נראה הרבה יותר לבן כאשר נשארנו במרחב הצבע
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+RGB
+\lang hebrew
+.
+\end_layout
+
+\begin_layout Subsubsection
+מגבלות השיטה
+\end_layout
+
+\begin_layout Itemize
+חפצים בוהקים באופן חריג, וכן חפצים עם תכונות של שקיפות ושבירה של אור ישבשו
+ את התהליך: ההנחה שחיסור של התמונות נותן את תמונת הפלאש בלבד לא תתקיים.
+\end_layout
+
+\begin_layout Subsection
+הערות
+\end_layout
+
+\begin_layout Itemize
+לא ניתן להניח שהאור 
+\begin_inset Formula $L_{1}$
+\end_inset
+
+ הוא אור יום: הפעלה של מטריצת מעבר
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+D65
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+על 
+\begin_inset Formula $I_{1}$
+\end_inset
+
+ )דרך
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\lang hebrew
+( לא שיפר את התוצאות והקיר נותר צהבהב.
+ גם ההיסטוגרמות נותרו זהות.
+\end_layout
+
+\begin_layout Itemize
+הפלטים הוצגו תחת תיקון גאמה )עבור 
+\begin_inset Formula $\gamma=2.4$
+\end_inset
+
+(, כדי שיהיה קל יותר ראות את ההבדלים ביניהם.
+ באופן עקרוני היינו בוחרים לבצע
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+scale
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+לינארי על התמונה )שרובה בטווח 
+\begin_inset Formula $\left[0,0.2\right]$
+\end_inset
+
+ עבור כל הערוצים(, אך כיוון שפיקסלים בודדים קרובים מאוד ל-
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\numeric on
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+1
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\numeric off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ לא ניתן לקבל תוצאות בהירות ע"י חלוקה במקסימום או לחלק בערך אחר ועדיין לשמור
+ את הפיקסלים בטווח המותר של 
+\begin_inset Formula $\left[0,1\right]$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+תוצאות
+\end_layout
+
+\begin_layout Itemize
+ראשית, אלה התמונות המקוריות תחת תיקון גאמה:
+\end_layout
+
+\begin_layout Itemize
+לאחר ביצוע
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+white balancing
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+פשוט:
+\end_layout
+
+\begin_layout Itemize
+לאחר ביצוע
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+white balancing
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ משופר:
+\end_layout
+
+\begin_layout Itemize
+תחת
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\lang hebrew
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename result/flash_simple_wb_VON_KRIES_gama.png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename result/flash_simple_wb_BRADFORD_gama.png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+קיימים הבדלים ביניהם )השמאלי טוב יותר(, אך ניכר שבשני המקרים צבעו של הקיר
+ איננו לבן
+\end_layout
+
+\end_deeper
+\end_body
+\end_document
