@@ -53,17 +53,17 @@ def show_img(img, title=""):
     plt.show()
 
 
-def simple_wb(flash_img, no_flash_img, flash_chromatic, lms_mat):
-    lms_flash_img = rgb2lms(flash_img, lms_mat)
-    lms_no_flash_img = rgb2lms(no_flash_img, lms_mat)
-    delta = lms_flash_img - lms_no_flash_img
-    # flash_chromatic_day = np.array([0.9504, 1.0, 1.0889])[np.newaxis][np.newaxis]
-    # balanced_delta = lms_no_flash_img @ (np.eye(3) * (1 /flash_chromatic_day))
-    balanced_delta = delta @ (np.eye(3) * (1 /flash_chromatic))
-    return lms2rgb(balanced_delta, lms_mat)
+def simple_wb(flash_img, no_flash_img, flash_chromatic, lms_mat, is_flash):
+    if is_flash:
+        delta = flash_img - no_flash_img
+        balanced = delta @ (np.eye(3) * (1 / flash_chromatic))
+    else:
+        flash_chromatic_day = np.array([0.9504, 1.0, 1.0889])[np.newaxis][np.newaxis]
+        balanced = no_flash_img @ (np.eye(3) * (1 /flash_chromatic_day))
+    return balanced
 
 
-def wb(flash_img, no_flash_img, flash_chromatic, lms_mat):
+def wb(flash_img, no_flash_img, flash_chromatic, lms_mat, is_flash):
     # Article addition: divide by c (mean of no_flash_img / delta) instead of
     # directly by flash_chromatic
     if np.any(lms_mat):
@@ -117,23 +117,50 @@ def gamma_corrections(img, gamma):
     return np.power(img, inv_gamma)
 
 
-def main(noflash_path, flash_path, gray_card_path, lms_mat, wb_func=wb):
+def main(noflash_path, flash_path, gray_card_path, lms_mat, transfer_to_lms, is_flash, wb_func=wb):
     no_flash_img = read_tiff(noflash_path)
-    # show_img(no_flash_img / np.max(no_flash_img, axis=(0,1)))
     flash_img = read_tiff(flash_path)
     gray_card_img = read_tiff(gray_card_path)
     points_of_card = 686, 1842, 971, 2324  # for given images
-    flash_cromatic = find_chromaticity_coordinates(gray_card_img, *points_of_card, lms_mat)
-
-    balanced = wb_func(flash_img, no_flash_img, flash_cromatic, lms_mat)
+    flash_chromaticity = find_chromaticity_coordinates(gray_card_img, *points_of_card, lms_mat)
+    if transfer_to_lms:
+        balanced = lms2rgb(wb_func(rgb2lms(flash_img, lms_mat), rgb2lms(no_flash_img, lms_mat),
+                           rgb2lms(flash_chromaticity[np.newaxis][np.newaxis], lms_mat), lms_mat,
+                                   is_flash), lms_mat)
+    else:
+        balanced = wb_func(flash_img, no_flash_img, flash_chromaticity, lms_mat, is_flash)
     return balanced
 
+
+def show_result(algo, is_flash):
+    if is_flash:
+        image_mode = "flash"
+    else:
+        image_mode = "no flash"
+    for tran_matrix in [XYZ2LMS_VON_KRIES, XYZ2LMS_BRADFORD]:
+        if np.all(tran_matrix == XYZ2LMS_VON_KRIES):
+            trar_name = "VON KRIES"
+        else:
+            trar_name = "BRADFORD"
+        for is_transfer_to_lms in [True, False]:
+
+            if is_transfer_to_lms:
+                balanced_img = main(noflash_path, flash_path, gray_card_path, tran_matrix,
+                                    is_transfer_to_lms, is_flash, algo)
+                show_img(gamma_corrections(balanced_img, 2.4), "Simple white balance for "+image_mode+" image "
+                                                               "with gama correction correction\n Use " +trar_name+" matrix to transfer to lms")
+            else:
+                balanced_img = main(noflash_path, flash_path, gray_card_path, tran_matrix,
+                                    is_transfer_to_lms, is_flash, algo)
+                show_img(gamma_corrections(balanced_img, 2.4),
+                         "Simple white balance for "+ image_mode +" image with gama correction \n Use "
+                         +trar_name+" matrix to transfer to lms only for chromaticity")
 
 if __name__ == '__main__':
     noflash_path = 'input-tiff/noflash.tiff'
     flash_path = 'input-tiff/withflash.tiff'
     gray_card_path = 'input-tiff/graycard.tiff'
-
+    show_result(simple_wb, False)
     # simple_balanced = main(noflash_path, flash_path, gray_card_path, wb_func=simple_wb)
     # show_img(simple_balanced, "simple WB")
     #
@@ -145,10 +172,8 @@ if __name__ == '__main__':
     #                     lms_mat=np.eye(3, dtype=np.float))
     # balanced_img = main(noflash_path, flash_path, gray_card_path, wb_func=wb,
     #                     lms_mat=None)
-    balanced_img = main(noflash_path, flash_path, gray_card_path, XYZ2LMS_VON_KRIES, wb_func=simple_wb)
-    show_img(gamma_corrections(balanced_img, 2.4), "Simple white balance for flash image with gama correction"
-                                                   "correction,\n Use LMS VON KRIES matrix to transfer to "
-                                                   "lms")
+
+
     # flash_img = read_tiff(flash_path)
     # show_img(flash_img, "flash image")
     # no_flash_img = read_tiff(noflash_path)
