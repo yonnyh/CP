@@ -192,7 +192,7 @@ def main(noflash_path, flash_path, gray_card_path, lms_mat, is_transfer_to_lms, 
     flash_img = read_tiff(flash_path)
     gray_card_img = read_tiff(gray_card_path)
     # school gary card
-    four_points = [650, 1819, 630, 1846, 990, 1037, 2333, 2411]
+    # four_points = [650, 1819, 630, 1846, 990, 1037, 2333, 2411]
     # our gary card
     four_points = [350, 530, 340, 540, 270, 270, 450, 450]
 
@@ -260,8 +260,7 @@ if __name__ == '__main__':
     gray_card_path = 'input-our/graycard.tif'
     show_img(read_tiff(noflash_path), "Original noflush image")
     show_img(read_tiff(flash_path), "Original flush image")
-    # show_img(read_tiff(flash_path))
     # show_result(simple_wb, False, "simple", noflash_path, flash_path, gray_card_path)
     # show_result(simple_wb, True, "simple", noflash_path, flash_path, gray_card_path)
-    # show_result(wb, False, "Our", noflash_path, flash_path, gray_card_path)
+    show_result(wb, False, "Our", noflash_path, flash_path, gray_card_path)
 
