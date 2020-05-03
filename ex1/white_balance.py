@@ -134,15 +134,14 @@ def hist(img, title):
     plt.show()
 
 
-def find_chromaticity_coordinates(img_p, left, right, top, bot, lms_mat):
+def find_chromaticity_coordinates(img_p, points, lms_mat):
     """
     Find the chromaticity coordinates of the flush by the gary card image
     :param img_p: Gray card image
     :param lms_mat: The transform matrix to LMS
     :return: Chromaticity coordinates in RGB
     """
-    img = crop_image(img_p, left, right, top, bot)
-
+    img = crop_image(img_p, points)
     # Transfer the image to LMS
     lms_img = rgb2lms(img, lms_mat)
 
@@ -152,13 +151,16 @@ def find_chromaticity_coordinates(img_p, left, right, top, bot, lms_mat):
     return lms2rgb(chromaticity[np.newaxis][np.newaxis], lms_mat)[0, 0]
 
 
-def crop_image(img, left, right, top, bot):
+def crop_image(img, four_points):
     """
     Crop the image (crop the gary card image)
-    :param img: Gray card image
-    :return: Gary card only
     """
-    grey_card = img[top:bot, left:right]
+    x1, x2, x3, x4, y1, y2, y3, y4 = four_points
+    top_left_x = min([x1, x2, x3, x4])
+    top_left_y = min([y1, y2, y3, y4])
+    bot_right_x = max([x1, x2, x3, x4])
+    bot_right_y = max([y1, y2, y3, y4])
+    grey_card = img[top_left_y:bot_right_y, top_left_x:bot_right_x]
     return grey_card
 
 
@@ -189,10 +191,13 @@ def main(noflash_path, flash_path, gray_card_path, lms_mat, is_transfer_to_lms, 
     no_flash_img = read_tiff(noflash_path)
     flash_img = read_tiff(flash_path)
     gray_card_img = read_tiff(gray_card_path)
-    points_of_card = 686, 1842, 971, 2324  # for given images
+    # school gary card
+    four_points = [650, 1819, 630, 1846, 990, 1037, 2333, 2411]
+    # our gary card
+    four_points = [350, 530, 340, 540, 270, 270, 450, 450]
 
     # Calculate the flash chromaticity
-    flash_chromaticity = find_chromaticity_coordinates(gray_card_img, *points_of_card, lms_mat)
+    flash_chromaticity = find_chromaticity_coordinates(gray_card_img, four_points, lms_mat)
 
     # Transfer the image to the LMS
     if is_transfer_to_lms:
@@ -247,10 +252,16 @@ def show_result(algo, is_flash, name_algo, noflash_path, flash_path, gray_card_p
 
 
 if __name__ == '__main__':
-    noflash_path = 'input-tiff/noflash.tiff'
-    flash_path = 'input-tiff/withflash.tiff'
-    gray_card_path = 'input-tiff/graycard.tiff'
+    # noflash_path = 'input-tiff/noflash.tiff'
+    # flash_path = 'input-tiff/withflash.tiff'
+    # gray_card_path = 'input-tiff/graycard.tiff'
+    noflash_path = 'input-our/noflash.tif'
+    flash_path = 'input-our/flash.tif'
+    gray_card_path = 'input-our/graycard.tif'
+    show_img(read_tiff(noflash_path), "Original noflush image")
+    show_img(read_tiff(flash_path), "Original flush image")
+    # show_img(read_tiff(flash_path))
     # show_result(simple_wb, False, "simple", noflash_path, flash_path, gray_card_path)
     # show_result(simple_wb, True, "simple", noflash_path, flash_path, gray_card_path)
-    show_result(wb, False, "Our", noflash_path, flash_path, gray_card_path)
+    # show_result(wb, False, "Our", noflash_path, flash_path, gray_card_path)
 
