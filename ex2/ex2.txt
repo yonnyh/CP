@@ -1,0 +1,18 @@
+2nd Assignment – Synthetic Aperture - Pairs
+
+1. Take several pictures from a camera moving sideways.
+Controlled Motion: Equal translation between frames
+
+2. Create an interactive software that will take pictures from (1)
+and perform:
+a) Refocusing (potentially removing occlusions)
+b) Change Viewpoint (left, right, forward, backward)
+
+3. Bonus: Software will measure camera motion
+
+
+2-stage submission:
+
+1. Define GUI by 18/05/2020, get OK before programming!
+2. Submit Program by 07/06/2020
+3. Each project will be checked by an interview

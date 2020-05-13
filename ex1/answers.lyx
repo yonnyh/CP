@@ -403,7 +403,7 @@ LMS
 \end_layout
 
 \begin_layout Itemize
-מלבד השימוש ב-
+השתמשנו ב-
 \family roman
 \series medium
 \shape up
@@ -453,62 +453,9 @@ LMS
 \uwave default
 \noun default
 \color inherit
-לשם השגת הכרומטיות של הפלאש )כפי שנלמד בכיתה(, לא ראינו ייתרון למעבר למרחב
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\strikeout off
-\uuline off
-\uwave off
-\noun off
-\color none
- 
-\family default
-\series default
-\shape default
-\size default
-\emph default
-\bar default
-\strikeout default
-\uuline default
-\uwave default
-\noun default
-\color inherit
-\lang english
-LMS
-\lang hebrew
-.
- למעשה, ההיפך הוא הנכון: הקיר נראה הרבה יותר לבן כאשר נשארנו במרחב הצבע
-\family roman
-\series medium
-\shape up
-\size normal
-\emph off
-\bar no
-\strikeout off
-\uuline off
-\uwave off
-\noun off
-\color none
- 
-\family default
-\series default
-\shape default
-\size default
-\emph default
-\bar default
-\strikeout default
-\uuline default
-\uwave default
-\noun default
-\color inherit
-\lang english
-RGB
-\lang hebrew
-.
+לשם השגת הכרומטיות של הפלאש )כפי שנלמד בכיתה(, וכן ביצענו נסיונות לאיזון
+ הצבע הכללי במרחב זה.
+ על חלק מהדוגמאות לא ניכרה השפעה, ואילו על חלק אחר ההשפעה היתה משמעותית.
 \end_layout
 
 \begin_layout Subsubsection
@@ -724,10 +671,43 @@ scale
 תוצאות
 \end_layout
 
+\begin_layout Subsection
+הדאטה שניתן בתרגיל
+\end_layout
+
 \begin_layout Itemize
 ראשית, אלה התמונות המקוריות תחת תיקון גאמה:
 \end_layout
 
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename result/flash_original_gamma.png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename result/no_flash_original_gamma.png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+בשתי התמונות הקיר ורדרד 
+\backslash
+ צהוב.
+ הבאנו את התמונות כאינדיקציה להשוואה ביחס לתוצאות.
+\end_layout
+
+\end_deeper
 \begin_layout Itemize
 לאחר ביצוע
 \family roman
@@ -782,6 +762,118 @@ white balancing
 פשוט:
 \end_layout
 
+\begin_deeper
+\begin_layout Itemize
+בלי
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\lang hebrew
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename result/no_flash_simple_wb_VON_KRIES_gama.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename result/no_flash_simple_wb_BRADFORD_gama.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+עם
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\lang hebrew
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename result/no_flash_simple_wb_VON_KRIES_gama_lms.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename result/no_flash_simple_wb_BRADFORD_gama_lms.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+ניכרת הבהרה קלה, אך השיפור לא משמעותי.
+\end_layout
+
+\end_deeper
+\end_deeper
 \begin_layout Itemize
 לאחר ביצוע
 \family roman
@@ -824,8 +916,9 @@ white balancing
  משופר:
 \end_layout
 
+\begin_deeper
 \begin_layout Itemize
-תחת
+בלי
 \family roman
 \series medium
 \shape up
@@ -859,6 +952,91 @@ LMS
 \begin_layout Standard
 \align center
 \begin_inset Graphics
+	filename result/no_flash_our_wb_VON_KRIES_gama.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename result/no_flash_our_wb_BRADFORD_gama.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+עם
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\lang hebrew
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename result/no_flash_our_wb_VON_KRIES_gama_lms.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename result/no_flash_our_wb_BRADFORD_gama_lms.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+לא זו בלבד שאין שיפור, גם ניכר שתוצאה פחות מוצלחת.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+הערה: כמובן שלתקן את תמונת הפלאש אפשר באופן כמעט מושלם, שהרי אנו יודעים
+ את הכרומטיות שלה: 
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Graphics
 	filename result/flash_simple_wb_VON_KRIES_gama.png
 	lyxscale 50
 	scale 50
@@ -877,10 +1055,338 @@ LMS
 \end_layout
 
 \begin_layout Standard
-קיימים הבדלים ביניהם )השמאלי טוב יותר(, אך ניכר שבשני המקרים צבעו של הקיר
- איננו לבן
+ואכן הקירות נראים לבנים ממש.
 \end_layout
 
+\end_deeper
+\begin_layout Subsection
+דאטה שלנו
+\end_layout
+
+\begin_layout Itemize
+אלה התמונות המקוריות:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename result/our_flash_original.png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename result/our_noflash_original.png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+כאשר יש לנו ידע מוקדם על כך שהשידה בחזית היא לבנהת וכן ריבוע המשחק השמאלי-עליון.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+לאחר ביצוע
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+white balancing
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ משופר:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+בלי
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\lang hebrew
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename result/our_wb_VON_KRIES_gama.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename result/our_wb_BRADFORD_gama.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+עם
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\lang hebrew
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename result/our_wb_VON_KRIES_gama_lms.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename result/our_wb_BRADFORD_gama_lms.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+התמונות העליונות עברו הזחה לכחול, בעוד שהתחתונות קיבלו איזון צבע לא רע.
+ בהסבר הנפילה הגדולה של האלגוריתם עבור השארות במרחב
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+RGB
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+נוכל להציע מבט על ההיסטוגרמה של התמונה ללא הפלאש:
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename result/our_noflash_hist.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+ניכר שעבור כל ערוצי הצבע חסרים ערכים רבים באופן שנראה לא טבעי - אנחנו מצפים
+ שתמונה טבעית תכיל מרחב כמו-רציף של גוונים עבור כל ערוץ.
+ הדבר מעורר למחשבה שמהימנות הצילום מוטלת כאן בספק; אם מפאת המצלמה של הפלאפון
+ בו השתמשנו, אם בגלל התוכנה או משילוב כלשהו של השניים.
+\end_layout
+
+\begin_layout Standard
+ובכל זאת נציע הסבר לפער, מדוע תחת
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LMS
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+הבעיה נפתרה: כפי שלמדנו בשיעור, מרחב זה מתעדף את הערוץ הירוק, שהוא כמעט
+ וחף מפגמים בתמונה הנתונה, כפי שניתן לראות בהיסטוגרמה.
+ על כן התוצאות משקפות מצב טבעי יותר, ללא הזחה.
+ מבט על ההיסטוגרמה של התמונות הכחולות מגלה שההזחה איננה לכחול, אלא לסגול:
+ לאדום וכחול יחד, שתופסים את הפיקסלים עם הערכים הגבוהים, מה שמחזק את ההשערה
+ שלנו.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename result/our_wb_hist_gamma.png
+	lyxscale 40
+	scale 40
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
 \end_deeper
 \end_body
 \end_document
