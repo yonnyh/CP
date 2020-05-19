@@ -46,6 +46,13 @@ def test_panoram():
     p.generate_panoramic_images(1)
 
 
+def test_my_panorama():
+    lf = LightFileViewPoint(BANANA)
+    out = lf.calculate_angular_panorama(0.9)
+    plt.imshow(out)
+    plt.show()
+
+
 if __name__ == '__main__':
     # test_ordered_images_names()
     # test_all_images()
@@ -53,4 +60,5 @@ if __name__ == '__main__':
     # test_imgs2homographies()
     # test_wrap_img(0, 0, 0)
     # test_wrap_img(-10, 10, 40)
-    test_panoram()
+    # test_panoram()
+    test_my_panorama()

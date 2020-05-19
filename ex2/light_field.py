@@ -75,10 +75,8 @@ class LightFileViewPoint:
     def __init__(self, dir_path):
         self.dir_path = dir_path
         self.images_paths = self._get_images_paths()
-        self.w = 0
-        self.h = 0
-        self.Hs = None
 
+        # load homographies
         self._load_homographies()
 
     def _get_images_paths(self):
@@ -105,69 +103,60 @@ class LightFileViewPoint:
             Hs, minimum_right_translation=5)
         self.Hs = Hs[self.frames_for_panoramas]
 
-    def get_view(self, fram_num, col):  # todo continue here
-        # compute bounding boxes of all warped input images in the coordinate
-        # system of the middle image (as given by the homographies)
+    def calculate_angular_panorama(self, frac):
+        # A. Compute panorama canvas size
+        # Compute bounding boxes of all warped input images
         self.bounding_boxes = np.zeros((self.frames_for_panoramas.size, 2, 2))
         for i in range(self.frames_for_panoramas.size):
-            self.bounding_boxes[i] = compute_bounding_box(self.homographies[i],
-                                                          self.w, self.h)
-
-        # change our reference coordinate system to the panoramas
-        # all panoramas share the same coordinate system
+            self.bounding_boxes[i] = compute_bounding_box(self.Hs[i], self.w, self.h)
+        # Change our reference coordinate system to the panoramas.
         global_offset = np.min(self.bounding_boxes, axis=(0, 1))
         self.bounding_boxes -= global_offset
-
-        slice_centers = np.linspace(0, self.w, number_of_panoramas + 2,
-                                    endpoint=True, dtype=np.int)[1:-1]
-        warped_slice_centers = np.zeros(
-            (number_of_panoramas, self.frames_for_panoramas.size))
-        # every slice is a different panorama, it indicates the slices of the
-        # input images from which the panorama
-        # will be concatenated
-        for i in range(slice_centers.size):
-            slice_center_2d = np.array([slice_centers[i], self.h // 2])[None,
-                              :]
-            # homography warps the slice center to the coordinate system of
-            # the middle image
-            warped_centers = [apply_homography(slice_center_2d, h) for h in
-                              self.homographies]
-            # we are actually only interested in the x coordinate of each
-            # slice center in the panoramas' coordinate system
-            warped_slice_centers[i] = np.array(warped_centers)[:, :,
-                                      0].squeeze() - global_offset[0]
-
         panorama_size = np.max(self.bounding_boxes, axis=(0, 1)).astype(
             np.int) + 1
 
-        # boundary between input images in the panorama
-        x_strip_boundary = ((warped_slice_centers[:,
-                             :-1] + warped_slice_centers[:, 1:]) / 2)
-        x_strip_boundary = np.hstack([np.zeros((number_of_panoramas, 1)),
-                                      x_strip_boundary,
-                                      np.ones((number_of_panoramas, 1)) *
-                                      panorama_size[0]])
+        # B. Compute boundaries between slices
+        # center of a frame
+        slice_center_2d = np.array([int(self.w * frac), self.h // 2])[None, :]
+        # center of all frames (related to middle frame)
+        warped_centers = [apply_homography(slice_center_2d, h) for h in
+                          self.Hs]
+        # get x coordinate of each slice center
+        warped_slice_centers = np.array(warped_centers)[:, :, 0].squeeze() - \
+                               global_offset[0]
+        # boundary between input images in the panorama (and ends of panorama)
+        x_strip_boundary = ((warped_slice_centers[
+                             :-1] + warped_slice_centers[1:]) / 2)
+        x_strip_boundary = np.hstack([0, x_strip_boundary, panorama_size[0]])
         x_strip_boundary = x_strip_boundary.round().astype(np.int)
 
-        self.panoramas = np.zeros(
-            (number_of_panoramas, panorama_size[1], panorama_size[0], 3),
-            dtype=np.float64)
+        # C. Put images in slices
+        panorama = np.zeros((panorama_size[1], panorama_size[0], 3), dtype=np.uint8)
         for i, frame_index in enumerate(self.frames_for_panoramas):
             # warp every input image once, and populate all panoramas
-            image = sol4_utils.read_image(self.files[frame_index], 2)
-            warped_image = warp_image(image, self.homographies[i])
+            image = plt.imread(self.dir_path + f"{self.images_paths[i]}")
+            warped_image = warp_image(image, self.Hs[i])
             x_offset, y_offset = self.bounding_boxes[i][0].astype(np.int)
             y_bottom = y_offset + warped_image.shape[0]
 
-            for panorama_index in range(number_of_panoramas):
-                # take strip of warped image and paste to current panorama
-                boundaries = x_strip_boundary[panorama_index, i:i + 2]
-                image_strip = warped_image[:,
-                              boundaries[0] - x_offset: boundaries[
-                                                            1] - x_offset]
-                x_end = boundaries[0] + image_strip.shape[1]
-                self.panoramas[panorama_index, y_offset:y_bottom,
-                boundaries[0]:x_end] = image_strip
+            # take strip of warped image and paste to current panorama
+            boundaries = x_strip_boundary[i:i + 2]
+            image_strip = warped_image[:,
+                          boundaries[0] - x_offset: boundaries[1] - x_offset]
+            x_end = boundaries[0] + image_strip.shape[1]
+            panorama[y_offset:y_bottom, boundaries[0]:x_end] = image_strip
+
+        # D. Crop panorama, to get clean rectangle output
+        l = int(np.amax(self.bounding_boxes[:, 0, 0]))
+        u = int(np.amax(self.bounding_boxes[:, 0, 1]))
+        r = int(np.amin(self.bounding_boxes[:, 1, 0]))
+        d = int(np.amin(self.bounding_boxes[:, 1, 1]))
+        self.panorama = panorama[u:d, l:r, :]
+
+        return self.panorama
+
+    def crop_panorama(self):
+        pass
 
 
 def panoram(dir_path):
