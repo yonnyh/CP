@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 from ex2.impro_4 import *
 from os import walk
 import cv2
+from scipy.ndimage.interpolation import shift
+from skimage.transform import EuclideanTransform, warp
+from skimage.color import rgb2gray
 
 
 def all_images(dir_path, gray=False):
@@ -35,6 +38,12 @@ def homography(curr_img, prev_img, debug=False):
     if prev_img is None:
         return
 
+    # prev_gray = cv2.cvtColor(prev_img, cv2.COLOR_BGR2GRAY)
+    # curr_gray = cv2.cvtColor(curr_img, cv2.COLOR_BGR2GRAY)
+    # src_pts = cv2.goodFeaturesToTrack(prev_gray, 100, 0.1, 3)
+    # dst_pts = cv2.goodFeaturesToTrack(curr_gray, 100, 0.1, 3)
+    # H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 2.0)
+
     orb = cv2.ORB_create()
     kpt1, des1 = orb.detectAndCompute(prev_img, None)
     kpt2, des2 = orb.detectAndCompute(curr_img, None)
@@ -64,14 +73,37 @@ def homography(curr_img, prev_img, debug=False):
     return H
 
 
-def imgs2homographies(imgs, idx_of_center=0):
-    Hs = []
-    for i in range(1, len(imgs)):
-        Hs.append(homography(imgs[i], imgs[i - 1]))
-    ac_hs = accumulate_homographies(Hs, idx_of_center)
+def homography2(curr_img, prev_img, debug=False):
+    points_and_descriptors = []
+    for image in (curr_img, prev_img):
+        image = sol4_utils.read_image(image, 1)
+        pyramid, _ = sol4_utils.build_gaussian_pyramid(image, 3, 7)
+        points_and_descriptors.append(find_features(pyramid))
+
+    # Compute homographies between successive pairs of images.
+    for i in range(len(points_and_descriptors) - 1):
+        points1, points2 = points_and_descriptors[i][0], \
+                           points_and_descriptors[i + 1][0]
+        desc1, desc2 = points_and_descriptors[i][1], \
+                       points_and_descriptors[i + 1][1]
+
+        # Find matching feature points.
+        ind1, ind2 = match_features(desc1, desc2, .7)
+        points1, points2 = points1[ind1, :], points2[ind2, :]
+
+        # Compute homography using RANSAC.
+        H12, inliers = ransac_homography(points1, points2, 100, 6)
+
+        # Uncomment for debugging: display inliers and outliers among
+        # matching points.
+        # In the submitted code this function should be commented out!
+        # display_matches(self.images[i], self.images[i+1], points1 ,
+        # points2, inliers)
+
+        return H12
 
 
-class LightFileViewPoint:
+class LightField:
     def __init__(self, dir_path):
         self.dir_path = dir_path
         self.images_paths = self._get_images_paths()
@@ -87,14 +119,35 @@ class LightFileViewPoint:
         return sorted(f)
 
     def _load_homographies(self):
-        Hs = []
-        prev_img = plt.imread(self.dir_path + f"{self.images_paths[0]}")
-        self.h, self.w = prev_img.shape[0], prev_img.shape[1]
+        points_and_descriptors = []
+        for file in self.images_paths:
+            image = sol4_utils.read_image(self.dir_path + file, 1)
+            self.h, self.w = image.shape
+            pyramid, _ = sol4_utils.build_gaussian_pyramid(image, 3, 7)
+            points_and_descriptors.append(find_features(pyramid))
 
-        for i in range(1, len(self.images_paths)):
-            curr_img = plt.imread(self.dir_path + f"{self.images_paths[i]}")
-            Hs.append(homography(curr_img, prev_img))
-            prev_img = curr_img
+        # Compute homographies between successive pairs of images.
+        Hs = []
+        for i in range(len(points_and_descriptors) - 1):
+            points1, points2 = points_and_descriptors[i][0], \
+                               points_and_descriptors[i + 1][0]
+            desc1, desc2 = points_and_descriptors[i][1], \
+                           points_and_descriptors[i + 1][1]
+
+            # Find matching feature points.
+            ind1, ind2 = match_features(desc1, desc2, .7)
+            points1, points2 = points1[ind1, :], points2[ind2, :]
+
+            # Compute homography using RANSAC.
+            H12, inliers = ransac_homography(points1, points2, 100, 6)
+
+            # Uncomment for debugging: display inliers and outliers among
+            # matching points.
+            # In the submitted code this function should be commented out!
+            # display_matches(self.images[i], self.images[i+1], points1 ,
+            # points2, inliers)
+
+            Hs.append(H12)
 
         accumulated_homographies = accumulate_homographies(Hs,
                                                            (len(Hs) - 1) // 2)
@@ -102,6 +155,11 @@ class LightFileViewPoint:
         self.frames_for_panoramas = filter_homographies_with_translation(
             Hs, minimum_right_translation=5)
         self.Hs = Hs[self.frames_for_panoramas]
+
+
+class LightFileViewPoint(LightField):
+    def __init__(self, dir_path):
+        super().__init__(dir_path)
 
     def calculate_angular_panorama(self, frac):
         # A. Compute panorama canvas size
@@ -130,7 +188,7 @@ class LightFileViewPoint:
         x_strip_boundary = np.hstack([0, x_strip_boundary, panorama_size[0]])
         x_strip_boundary = x_strip_boundary.round().astype(np.int)
 
-        # C. Put images in slices
+        # C. Put relevant parts from images in slices
         panorama = np.zeros((panorama_size[1], panorama_size[0], 3), dtype=np.uint8)
         for i, frame_index in enumerate(self.frames_for_panoramas):
             # warp every input image once, and populate all panoramas
@@ -155,13 +213,20 @@ class LightFileViewPoint:
 
         return self.panorama
 
-    def crop_panorama(self):
+    def crop_panorama(self, frame_idx, col_idx):
         pass
 
 
-def panoram(dir_path):
-    imgs = all_images(dir_path)
+class LightFieldRefocus(LightField):
+    def __init__(self, dir_path):
+        super().__init__(dir_path)
 
-
-if __name__ == '__main__':
-    pass
+    def refocus(self, shift_size):
+        canvas = np.zeros((self.h, self.w, 3))
+        all_sifts = 0
+        for i in self.frames_for_panoramas:
+            all_sifts += shift_size
+            image = plt.imread(self.dir_path + f"{self.images_paths[i]}").astype(np.float64)
+            shifted = shift(image, [0, all_sifts, 0])
+            canvas = canvas + shifted
+        return canvas / self.frames_for_panoramas.size

@@ -3,6 +3,7 @@ from ex2.light_field import *
 
 STANFORD = "data/Pebbles-Stanford-1/"
 BANANA = "data/Banana/"
+CHESS_S = "data/chess-small/"
 
 
 def test_all_images():
@@ -22,20 +23,18 @@ def test_homography():
     print(H - calc_H)  # has to be small in all entries
 
 
-def test_imgs2homographies():
-    imgs = all_images(BANANA, gray=True)[:2]
-    print(imgs2homographies(imgs))
-
-
 def test_wrap_img(x, y, theta):
-    img = cv2.imread(STANFORD + "IMG_9246.JPG", cv2.IMREAD_GRAYSCALE)
+    # img = cv2.imread(STANFORD + "IMG_9246.JPG", cv2.IMREAD_GRAYSCALE)
+    img = plt.imread(STANFORD + "/IMG_9246.JPG")
     # img = plt.imread(STANFORD + "/IMG_9246.JPG").astype(np.uint8)
     # img = cv2.colorChange(img, cv2.COLOR_RGB2GRAY)
     theta = np.deg2rad(theta)
     H = np.array([[np.cos(theta),   np.sin(theta),  x],
                   [-np.sin(theta),  np.cos(theta),  y],
                   [0,               0,              1]])
-    new_img = warp_channel(img, H)
+    trans = EuclideanTransform(matrix=H)
+    new_img = warp(img, trans)
+    # new_img = warp_channel(img, H)
     plt.imshow(new_img)
     plt.show()
 
@@ -48,7 +47,22 @@ def test_panoram():
 
 def test_my_panorama():
     lf = LightFileViewPoint(BANANA)
-    out = lf.calculate_angular_panorama(0.9)
+    out = lf.calculate_angular_panorama(0.5)
+    plt.imshow(out)
+    plt.show()
+
+
+def test_shift():
+    img = plt.imread(BANANA + "rsz_capture_00004.jpg")[200:300, 200:300, :]
+    simg = shift(img, [0, 15, 0], mode='constant')
+    conc = np.hstack((img, simg))
+    plt.imshow(conc)
+    plt.show()
+
+
+def test_refocus():
+    lf = LightFieldRefocus(CHESS_S)
+    out = lf.refocus(1)
     plt.imshow(out)
     plt.show()
 
@@ -59,6 +73,8 @@ if __name__ == '__main__':
     # test_homography()
     # test_imgs2homographies()
     # test_wrap_img(0, 0, 0)
-    # test_wrap_img(-10, 10, 40)
+    # test_wrap_img(10, 10, 40)
     # test_panoram()
-    test_my_panorama()
+    # test_my_panorama()
+    # test_shift()
+    test_refocus()
