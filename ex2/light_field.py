@@ -108,8 +108,9 @@ class LightField:
         self.dir_path = dir_path
         self.images_paths = self._get_images_paths()
 
-        # load homographies
+        # load homographies and transformed images (rotation and y axis only)
         self._load_homographies()
+        self._load_images()
 
     def _get_images_paths(self):
         f = []
@@ -120,8 +121,8 @@ class LightField:
 
     def _load_homographies(self):
         points_and_descriptors = []
-        for file in self.images_paths:
-            image = sol4_utils.read_image(self.dir_path + file, 1)
+        for im in self.images_paths:
+            image = sol4_utils.read_image(self.dir_path + im, 1)
             self.h, self.w = image.shape
             pyramid, _ = sol4_utils.build_gaussian_pyramid(image, 3, 7)
             points_and_descriptors.append(find_features(pyramid))
@@ -155,6 +156,19 @@ class LightField:
         self.frames_for_panoramas = filter_homographies_with_translation(
             Hs, minimum_right_translation=5)
         self.Hs = Hs[self.frames_for_panoramas]
+
+    def _load_images(self):
+        """
+        Load images such that they all rotated and y-axis-aligned related to
+            the middle image
+        """
+        images = []
+        for i, num in enumerate(list(self.frames_for_panoramas)):
+            img = plt.imread(self.dir_path + self.images_paths[num])
+            rot_y_H = np.copy(self.Hs[i])
+            rot_y_H[0, -1] = 0
+            images.append(warp(img, rot_y_H, output_shape=img.shape))
+        self.images = images
 
 
 class LightFileViewPoint(LightField):
@@ -221,12 +235,11 @@ class LightFieldRefocus(LightField):
     def __init__(self, dir_path):
         super().__init__(dir_path)
 
-    def refocus(self, shift_size):
-        canvas = np.zeros((self.h, self.w, 3))
-        all_sifts = 0
-        for i in self.frames_for_panoramas:
-            all_sifts += shift_size
-            image = plt.imread(self.dir_path + f"{self.images_paths[i]}").astype(np.float64)
-            shifted = shift(image, [0, all_sifts, 0])
-            canvas = canvas + shifted
-        return canvas / self.frames_for_panoramas.size
+    def refocus(self, shift_size, remove_occ):
+        shifted_images = np.zeros((len(self.frames_for_panoramas), self.h, self.w, 3))
+        for i in range(len(self.frames_for_panoramas)):
+            x_shift = self.Hs[i, 0, -1] * shift_size
+            shifted_images[i, :, :, :] = shift(self.images[i], [0, x_shift, 0])
+        if remove_occ:
+            return np.median(shifted_images, axis=0)
+        return np.mean(shifted_images, axis=0)

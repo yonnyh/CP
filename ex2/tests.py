@@ -4,6 +4,7 @@ from ex2.light_field import *
 STANFORD = "data/Pebbles-Stanford-1/"
 BANANA = "data/Banana/"
 CHESS_S = "data/chess-small/"
+NAHLAOT = "data/nahlaot/"
 
 
 def test_all_images():
@@ -46,7 +47,8 @@ def test_panoram():
 
 
 def test_my_panorama():
-    lf = LightFileViewPoint(BANANA)
+    # lf = LightFileViewPoint(BANANA)
+    lf = LightFileViewPoint(NAHLAOT)
     out = lf.calculate_angular_panorama(0.5)
     plt.imshow(out)
     plt.show()
@@ -60,9 +62,10 @@ def test_shift():
     plt.show()
 
 
-def test_refocus():
-    lf = LightFieldRefocus(CHESS_S)
-    out = lf.refocus(1)
+def test_refocus(remove_occ=False):
+    # lf = LightFieldRefocus(CHESS_S)
+    lf = LightFieldRefocus(BANANA)
+    out = lf.refocus(3, remove_occ)
     plt.imshow(out)
     plt.show()
 
@@ -75,6 +78,7 @@ if __name__ == '__main__':
     # test_wrap_img(0, 0, 0)
     # test_wrap_img(10, 10, 40)
     # test_panoram()
-    # test_my_panorama()
+    test_my_panorama()
     # test_shift()
-    test_refocus()
+    # test_refocus(remove_occ=False)
+    # test_refocus(remove_occ=True)
