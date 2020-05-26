@@ -2,106 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ex2.impro_4 import *
 from os import walk
-import cv2
 from scipy.ndimage.interpolation import shift
-from skimage.transform import EuclideanTransform, warp
-from skimage.color import rgb2gray
+from skimage.transform import warp
 from skimage.draw import line_aa
-
-
-def all_images(dir_path, gray=False):
-    """
-    Return list of all images form given directory path
-    """
-    f = []
-    for (dirpath, dirnames, filenames) in walk(dir_path):
-        f.extend(filenames)
-        break
-    names = sorted(f)
-
-    imgs = []
-    for im in names:
-        new_im = plt.imread(dir_path + f"{im}")
-        if not gray:
-            imgs.append(new_im)
-        else:
-            gray_im = cv2.cvtColor(new_im, cv2.COLOR_BGR2GRAY)
-            imgs.append(gray_im)
-    return imgs
-
-
-def homography(curr_img, prev_img, debug=False):
-    """
-    Find 3x3 homography between prev_img to img
-    :param img, prev_img: np.ndarray in dtype of uint8
-    :return: np.ndarray with shape (3, 3)
-    """
-    if prev_img is None:
-        return
-
-    # prev_gray = cv2.cvtColor(prev_img, cv2.COLOR_BGR2GRAY)
-    # curr_gray = cv2.cvtColor(curr_img, cv2.COLOR_BGR2GRAY)
-    # src_pts = cv2.goodFeaturesToTrack(prev_gray, 100, 0.1, 3)
-    # dst_pts = cv2.goodFeaturesToTrack(curr_gray, 100, 0.1, 3)
-    # H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 2.0)
-
-    orb = cv2.ORB_create()
-    kpt1, des1 = orb.detectAndCompute(prev_img, None)
-    kpt2, des2 = orb.detectAndCompute(curr_img, None)
-
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    matches = bf.match(des1, des2)
-    matches = sorted(matches, key=lambda x: x.distance)
-
-    src_pts = np.float32([kpt1[m.queryIdx].pt for m in matches]).reshape(
-        -1, 1, 2)
-    dst_pts = np.float32([kpt2[m.trainIdx].pt for m in matches]).reshape(
-        -1, 1, 2)
-
-    H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 2.0)
-
-    if debug:
-        mask = np.ravel(mask) > 0
-        src_pts = src_pts[mask].reshape(-1, 2)
-        dst_pts = dst_pts[mask].reshape(-1, 2)
-        xs = [src_pts[:, 0], dst_pts[:, 0] + prev_img.shape[1]]
-        ys = [src_pts[:, 1], dst_pts[:, 1]]
-        im_h = cv2.hconcat([prev_img, curr_img])
-        plt.imshow(im_h)
-        plt.plot(xs, ys, mfc='r', c='b', lw=.2, ms=3, marker='o')
-        plt.show()
-
-    return H
-
-
-def homography2(curr_img, prev_img, debug=False):
-    points_and_descriptors = []
-    for image in (curr_img, prev_img):
-        image = sol4_utils.read_image(image, 1)
-        pyramid, _ = sol4_utils.build_gaussian_pyramid(image, 3, 7)
-        points_and_descriptors.append(find_features(pyramid))
-
-    # Compute homographies between successive pairs of images.
-    for i in range(len(points_and_descriptors) - 1):
-        points1, points2 = points_and_descriptors[i][0], \
-                           points_and_descriptors[i + 1][0]
-        desc1, desc2 = points_and_descriptors[i][1], \
-                       points_and_descriptors[i + 1][1]
-
-        # Find matching feature points.
-        ind1, ind2 = match_features(desc1, desc2, .7)
-        points1, points2 = points1[ind1, :], points2[ind2, :]
-
-        # Compute homography using RANSAC.
-        H12, inliers = ransac_homography(points1, points2, 100, 6)
-
-        # Uncomment for debugging: display inliers and outliers among
-        # matching points.
-        # In the submitted code this function should be commented out!
-        # display_matches(self.images[i], self.images[i+1], points1 ,
-        # points2, inliers)
-
-        return H12
 
 
 class LightField:
@@ -190,7 +93,18 @@ class LightFileViewPoint(LightField):
             x_shift = int(self.relative_shifts[i])
             self.shifted[i, :, x_shift:self.w + x_shift, :] = self.images[i]
 
-    def calculate_view_point_by_frames(self, frame1, col1, frame2, col2):
+    def view_point_by_mask(self, mask):
+        _, h, w, c = self.shifted.shape
+        canvas = np.zeros((h, w, c))
+        for i in range(self.num_of_frames):
+            canvas = canvas + self.shifted[i, :, :, :] * mask[i, :][:, None]
+
+        # Crop canvas to remove zeros-pad
+        non_zeros_col_ides = np.where(np.sum(canvas, axis=(0, 2)) > 0)[0]
+        return canvas[:, non_zeros_col_ides, :]
+
+    def calculate_view_point_by_frames(self, frame1, col1, frame2, col2,
+                                       debug=False):
         # Validity check
         for f in [frame1, frame2]:
             if f >= self.num_of_frames:
@@ -201,76 +115,46 @@ class LightFileViewPoint(LightField):
                 raise IndexError(f"Images width is {self.w}, and {col} is "
                                  f"out of range")
 
-        # Create mask
         frames, h, w, c = self.shifted.shape
         mask = np.zeros((frames, w))
         rr, cc, val = line_aa(frame1, self.relative_shifts[frame1] + col1,
                               frame2, self.relative_shifts[frame2] + col2)
         mask[rr, cc] = val
 
-        # Put slices on canvas
-        canvas = np.zeros((h, w, c))
-        for i in range(self.num_of_frames):
-            canvas = canvas + self.shifted[i, :, :, :] * mask[i, :][:, None]
+        if debug:
+            plt.imshow(mask)
+            plt.show()
 
-        # Crop canvas to remove zeros-pad
-        non_zeros_col_ides = np.where(np.sum(canvas, axis=(0, 2)) > 0)[0]
-        return canvas[:, non_zeros_col_ides, :]
+        return self.view_point_by_mask(mask)
 
-    def calculate_view_point_by_angle(self, frame, col, angle):
-        pass
+    def calculate_view_point_by_angle(self, frame, col, angle_deg, debug=False):
+        # Validity check
+        if frame >= self.num_of_frames:
+            raise IndexError(f"There are only {self.num_of_frames} frames,"
+                             f" and {frame} is out of range")
+        if col >= self.w:
+            raise IndexError(f"Images width is {self.w}, and {col} is "
+                             f"out of range")
+        if angle_deg > 180 or angle_deg < 0:
+            raise ValueError(f"Angle mast be between 0 to 180")
 
-    def calculate_angular_panorama(self, frac):
-        # A. Compute panorama canvas size
-        # Compute bounding boxes of all warped input images
-        self.bounding_boxes = np.zeros((self.frames_for_panoramas.size, 2, 2))
-        for i in range(self.frames_for_panoramas.size):
-            self.bounding_boxes[i] = compute_bounding_box(self.Hs[i], self.w, self.h)
-        # Change our reference coordinate system to the panoramas.
-        global_offset = np.min(self.bounding_boxes, axis=(0, 1))
-        self.bounding_boxes -= global_offset
-        panorama_size = np.max(self.bounding_boxes, axis=(0, 1)).astype(
-            np.int) + 1
+        frames, h, w, c = self.shifted.shape
+        mask = np.zeros((frames, w))
 
-        # B. Compute boundaries between slices
-        # center of a frame
-        slice_center_2d = np.array([int(self.w * frac), self.h // 2])[None, :]
-        # center of all frames (related to middle frame)
-        warped_centers = [apply_homography(slice_center_2d, h) for h in
-                          self.Hs]
-        # get x coordinate of each slice center
-        warped_slice_centers = np.array(warped_centers)[:, :, 0].squeeze() - \
-                               global_offset[0]
-        # boundary between input images in the panorama (and ends of panorama)
-        x_strip_boundary = ((warped_slice_centers[
-                             :-1] + warped_slice_centers[1:]) / 2)
-        x_strip_boundary = np.hstack([0, x_strip_boundary, panorama_size[0]])
-        x_strip_boundary = x_strip_boundary.round().astype(np.int)
+        angle_rad = np.deg2rad(angle_deg - 90)
+        col2 = self.relative_shifts[frame] + col + \
+               (self.num_of_frames - frame) * np.tan(angle_rad)
+        rr, cc, val = line_aa(frame, col, self.num_of_frames - 1, int(col2))
+        valid = np.where((cc >= 0) & (cc < self.shifted.shape[2]))[0]
+        rr_valid, cc_valid, val_valid = rr[valid], cc[valid], val[valid]
 
-        # C. Put relevant parts from images in slices
-        panorama = np.zeros((panorama_size[1], panorama_size[0], 3), dtype=np.uint8)
-        for i, frame_index in enumerate(self.frames_for_panoramas):
-            # warp every input image once, and populate all panoramas
-            image = plt.imread(self.dir_path + f"{self.images_paths[i]}")
-            warped_image = warp_image(image, self.Hs[i])
-            x_offset, y_offset = self.bounding_boxes[i][0].astype(np.int)
-            y_bottom = y_offset + warped_image.shape[0]
+        mask[rr_valid, cc_valid] = val_valid
 
-            # take strip of warped image and paste to current panorama
-            boundaries = x_strip_boundary[i:i + 2]
-            image_strip = warped_image[:,
-                          boundaries[0] - x_offset: boundaries[1] - x_offset]
-            x_end = boundaries[0] + image_strip.shape[1]
-            panorama[y_offset:y_bottom, boundaries[0]:x_end] = image_strip
+        if debug:
+            plt.imshow(mask)
+            plt.show()
 
-        # D. Crop panorama, to get clean rectangle output
-        l = int(np.amax(self.bounding_boxes[:, 0, 0]))
-        u = int(np.amax(self.bounding_boxes[:, 0, 1]))
-        r = int(np.amin(self.bounding_boxes[:, 1, 0]))
-        d = int(np.amin(self.bounding_boxes[:, 1, 1]))
-        self.panorama = panorama[u:d, l:r, :]
-
-        return self.panorama
+        return self.view_point_by_mask(mask)
 
 
 class LightFieldRefocus(LightField):
