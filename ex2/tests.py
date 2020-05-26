@@ -47,9 +47,14 @@ def test_panoram():
 
 
 def test_my_panorama():
-    # lf = LightFileViewPoint(BANANA)
-    lf = LightFileViewPoint(NAHLAOT)
-    out = lf.calculate_angular_panorama(0.5)
+    lf = LightFileViewPoint(BANANA)
+    # out = lf.calculate_view_point_by_frames(0, 0, 21, 767)
+    # out = lf.calculate_view_point_by_frames(0, 300, 21, 300)
+    out = lf.calculate_view_point_by_frames(5, 0, 10, 767)
+
+    # lf = LightFileViewPoint(NAHLAOT)
+    # out = lf.calculate_view_point_by_frames(0, 0, 60, 729)
+
     plt.imshow(out)
     plt.show()
 
