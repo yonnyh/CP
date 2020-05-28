@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, FFMpegWriter
 from ex2.impro_4 import *
 from os import walk
 from scipy.ndimage.interpolation import shift
@@ -8,13 +9,21 @@ from skimage.draw import line_aa
 
 
 class LightField:
-    def __init__(self, dir_path):
+    def __init__(self, dir_path, apply_homographies=True):
         self.dir_path = dir_path
         self.images_paths = self._get_images_paths()
+        self.apply_homographies = apply_homographies
 
-        # load homographies and transformed images (rotation and y axis only)
-        self._load_homographies()
+        # Load homographies to field self.Hs and images to field self.images
+        # Note: images are rotated and y-axis-translated only if field
+        # self.apply_homographies is True
+        self._calc_homographies()
         self._load_images()
+
+        # Another fields:
+        # height and width of images: self.h, self.w
+        # number of frames: self.num_of_frames
+        # x-axis-translation list, relative to first frame: self.relative_shifts
 
     def _get_images_paths(self):
         f = []
@@ -23,7 +32,7 @@ class LightField:
             break
         return sorted(f)
 
-    def _load_homographies(self):
+    def _calc_homographies(self):
         points_and_descriptors = []
         for im in self.images_paths:
             image = sol4_utils.read_image(self.dir_path + im, 1)
@@ -45,13 +54,6 @@ class LightField:
 
             # Compute homography using RANSAC.
             H12, inliers = ransac_homography(points1, points2, 100, 6)
-
-            # Uncomment for debugging: display inliers and outliers among
-            # matching points.
-            # In the submitted code this function should be commented out!
-            # display_matches(self.images[i], self.images[i+1], points1 ,
-            # points2, inliers)
-
             Hs.append(H12)
 
         self.num_of_frames = len(Hs) + 1
@@ -59,29 +61,25 @@ class LightField:
         self.relative_shifts = [int(w) - int(self.Hs[0, 0, -1]) for w in
                                 self.Hs[:, 0, -1]]
 
-        # accumulated_homographies = accumulate_homographies(Hs, (len(Hs) - 1) // 2)
-        # Hs = np.stack(accumulated_homographies)
-        # self.frames_for_panoramas = filter_homographies_with_translation(
-        #     Hs, minimum_right_translation=5)
-        # self.Hs = Hs[self.frames_for_panoramas]
-
     def _load_images(self):
         """
         Load images such that they all rotated and y-axis-aligned related to
             the middle image
         """
-        images = []
+        self.images = []
         for i in range(self.num_of_frames):
             img = plt.imread(self.dir_path + self.images_paths[i])
-            rot_y_H = np.copy(self.Hs[i])
-            rot_y_H[0, -1] = 0
-            images.append(warp(img, rot_y_H, output_shape=img.shape))
-        self.images = images
+            if self.apply_homographies:
+                rot_y_H = np.copy(self.Hs[i])
+                rot_y_H[0, -1] = 0
+                self.images.append(warp(img, rot_y_H, output_shape=img.shape))
+            else:
+                self.images.append(img.astype(np.float64) / 255)
 
 
 class LightFileViewPoint(LightField):
-    def __init__(self, dir_path):
-        super().__init__(dir_path)
+    def __init__(self, dir_path, apply_homographies=True):
+        super().__init__(dir_path, apply_homographies)
         self._save_shifted()
 
     def _save_shifted(self):
@@ -158,8 +156,8 @@ class LightFileViewPoint(LightField):
 
 
 class LightFieldRefocus(LightField):
-    def __init__(self, dir_path):
-        super().__init__(dir_path)
+    def __init__(self, dir_path, apply_homographies=True):
+        super().__init__(dir_path, apply_homographies)
 
     def refocus(self, shift_size, remove_occ):
         shifted_images = np.zeros((self.num_of_frames, self.h, self.w, 3))
