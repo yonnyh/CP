@@ -41,11 +41,10 @@ def test_calculate_view_point_by_frames_animate(apply_hs=True):
     anim = FuncAnimation(fig, update, init_func=init,
                          frames=lf.num_of_frames, interval=50)
 
-    # plt.rcParams['animation.ffmpeg_path'] = '/usr/bin/ffmpeg'
-    # FFwriter = FFMpegWriter()
-    # anim.save('banana_animation.mp4', writer=FFwriter, fps=30)
-
-    # anim.save('banana_animation.avi')
+    # If problem in saving: https://www.wikihow.com/Install-FFmpeg-on-Windows
+    plt.rcParams['animation.ffmpeg_path'] = "C:\\FFmpeg\\bin\\ffmpeg.exe"
+    FFwriter = FFMpegWriter()
+    anim.save('banana_animation.mp4', writer=FFwriter)
 
     plt.show()
 
@@ -75,9 +74,9 @@ def test_refocus(remove_occ=False):
 
 if __name__ == '__main__':
     # test_calculate_view_point_by_frames(apply_hs=True)
-    test_calculate_view_point_by_frames(apply_hs=False)
+    # test_calculate_view_point_by_frames(apply_hs=False)
     # test_calculate_view_point_by_frames_animate(apply_hs=True)
-    # test_calculate_view_point_by_frames_animate(apply_hs=False)
+    test_calculate_view_point_by_frames_animate(apply_hs=False)
     # test_calculate_view_point_by_angle()
     # test_shift()
     # test_refocus(remove_occ=False)

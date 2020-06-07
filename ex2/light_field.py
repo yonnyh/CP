@@ -156,7 +156,7 @@ class LightFileViewPoint(LightField):
 
 
 class LightFieldRefocus(LightField):
-    def __init__(self, dir_path, apply_homographies=True):
+    def __init__(self, dir_path, apply_homographies=False):
         super().__init__(dir_path, apply_homographies)
 
     def refocus(self, shift_size, remove_occ):
