@@ -7,7 +7,7 @@ from scipy.ndimage.filters import convolve
 from scipy.ndimage.morphology import generate_binary_structure
 from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage import label, center_of_mass, map_coordinates
-from scipy.misc import imsave
+# from scipy.misc import imsave
 
 DER_X = [[1, 0, -1]]
 DER_Y = [[1], [0], [-1]]

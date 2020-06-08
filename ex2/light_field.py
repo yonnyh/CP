@@ -102,7 +102,7 @@ class LightFileViewPoint(LightField):
         return canvas[:, non_zeros_col_ides, :]
 
     def calculate_view_point_by_frames(self, frame1, col1, frame2, col2,
-                                       debug=False):
+                                       debug=True):
         # Validity check
         for f in [frame1, frame2]:
             if f >= self.num_of_frames:
@@ -125,7 +125,7 @@ class LightFileViewPoint(LightField):
 
         return self.view_point_by_mask(mask)
 
-    def calculate_view_point_by_angle(self, frame, col, angle_deg, debug=False):
+    def calculate_view_point_by_angle(self, frame, col, angle_deg, debug=True):
         # Validity check
         if frame >= self.num_of_frames:
             raise IndexError(f"There are only {self.num_of_frames} frames,"

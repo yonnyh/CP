@@ -1,6 +1,7 @@
 from tkinter import *
 from skimage.io import imread, imsave
 import sys
+import numpy as np
 
 FOCUS_GUI = 0
 VIEWPOINT_GUI = 1
@@ -177,6 +178,6 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         GUI(int(sys.argv[1]))
     else:
-        GUI(FOCUS_GUI)
-        # GUI(VIEWPOINT_GUI)
+        # GUI(FOCUS_GUI)
+        GUI(VIEWPOINT_GUI)
 
