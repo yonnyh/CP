@@ -6,9 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image, ImageTk
 
-COL_INDEX = 0
+STARTING_COL_INDEX = 0
 ANGLE_INDEX = 1
-FRAME_INDEX = 2
+STARTING_FRAME_INDEX = 2
+
 
 
 class ViewPoint:
@@ -18,7 +19,7 @@ class ViewPoint:
         self.root.grid_columnconfigure(1, weight=1)
         self.root.grid_rowconfigure(3, weight=1)
         self.root.title("Viewpoint GUI")
-        self.text_box_vars = [tk.StringVar(), tk.StringVar(), tk.StringVar()]
+        self.text_box_vars = [tk.StringVar() for _ in range(3)]
         self.sliders = []
         self.images = []
         self.tk_images = []
@@ -27,17 +28,50 @@ class ViewPoint:
         self.starting_frame_canvas = None
         self.controller_frame = None
         self.sliders_boxes_frame = None
+        self.img_frame = None
+        self.starting_frame = None
+        self.starting_col = None
+        self.ending_frame = None
+        self.ending_col = None
+
+    def choose_frames_loading(self):
+        def save_and_close():
+            self.starting_frame, self.starting_col = int(textbox_vars[0].get()), int(textbox_vars[1].get())
+            self.ending_frame, self.ending_col = int(textbox_vars[2].get()),  int(textbox_vars[3].get())
+            new_win.destroy()
+            # TODO calculate the output to show
+
+        textbox_vars = [tk.StringVar() for _ in range(4)]
+        new_win = tk.Toplevel(self.root)
+        tk.Label(new_win, text='Enter initial viewpoint:').grid(row=0, column=0, sticky='w', columnspan=4)
+        # first frame
+        tk.Label(new_win, text='Starting frame:').grid(row=1, column=0, sticky='w')
+        tk.Entry(new_win, width=6, textvariable=textbox_vars[0]).grid(row=1, column=1)
+        # first col
+        tk.Label(new_win, text='Starting column:').grid(row=1, column=2, sticky='w')
+        tk.Entry(new_win, width=6, textvariable=textbox_vars[1]).grid(row=1, column=3)
+
+        # last Frame
+        tk.Label(new_win, text='Ending frame:').grid(row=3, column=0, sticky='w')
+        tk.Entry(new_win, width=6, textvariable=textbox_vars[2]).grid(row=3, column=1)
+
+        # last rol
+        tk.Label(new_win, text='Ending column:').grid(row=3, column=2, sticky='w')
+        tk.Entry(new_win, width=6, textvariable=textbox_vars[3]).grid(row=3, column=3)
+        tk.Button(new_win, text='Run', command=save_and_close).grid(row=4, column=0, columnspan=3)
+
+        pass
 
     def update_text_box(self, val, index):
         self.text_box_vars[index].set(val)
-        if index == FRAME_INDEX and len(self.tk_images) != 0:
+        if index == STARTING_FRAME_INDEX and len(self.tk_images) != 0:
             self.starting_frame_canvas.create_image((150, 150), image=self.tk_images[int(val)])
 
     def update_slider(self, index):
         try:
             val = float(self.text_box_vars[index].get())
             self.sliders[index].set(val)
-            if index == FRAME_INDEX and len(self.tk_images) != 0:
+            if index == STARTING_FRAME_INDEX and len(self.tk_images) != 0:
                 self.starting_frame_canvas.create_image((150, 150), image=self.tk_images[int(val)])
         except ValueError:
             pass
@@ -70,20 +104,22 @@ class ViewPoint:
         if directory != '':
             del self.tk_images[:]
             files = sorted(os.listdir(directory))
+
             first_img = skimage.io.imread(os.path.join(directory, files[0]))/255.0
             self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(first_img))))
             # update the sliders
-            self.sliders[FRAME_INDEX].configure(to=len(files) - 1)
-            self.sliders[COL_INDEX].configure(to=first_img.shape[1] - 1)
+            self.sliders[STARTING_FRAME_INDEX].configure(to=self.ending_frame)
+            self.sliders[STARTING_COL_INDEX].configure(to=first_img.shape[1] - 1)
             images = np.zeros(np.insert(first_img.shape, 0, len(files)))
             images[0] = first_img
             # read all images
-            for i in range(1, len(files)):
+            for i in range(1,len(files)):
                 images[i] = skimage.io.imread(os.path.join(directory, files[i]))/255.0
                 self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(images[i]))))
+            self.choose_frames_loading()
 
-    def init_slider(self, frame, text, label_row, label_col, label_sticky, scale_from,
-               scale_to, resolution, index, color, scale_row, scale_col, scale_sticky):
+    def init_slider(self, frame, text, label_row, label_col, label_sticky, scale_from, scale_to,
+                    resolution, index, color, scale_row, scale_col, scale_sticky):
         tk.Label(frame, text=text).grid(row=label_row, column=label_col, sticky=label_sticky)
         slider = tk.Scale(frame, orient='horizontal', from_=scale_from, to=scale_to,
                               resolution=resolution, command=lambda val: self.update_text_box(val, index),
@@ -96,7 +132,7 @@ class ViewPoint:
         col_text_box = tk.Entry(frame, width=10, bd=3, textvariable=self.text_box_vars[
             index])
         col_text_box.grid(row=row, column=col, sticky='s')
-        self.text_box_vars[COL_INDEX].trace_add('write', lambda *args: self.update_slider(index))
+        self.text_box_vars[STARTING_COL_INDEX].trace_add('write', lambda *args: self.update_slider(index))
 
     def run(self):
 
@@ -124,10 +160,10 @@ class ViewPoint:
         tk.Label(self.controller_frame, text='Viewpoint by angle:').grid(row=0, column=0, sticky='nw')
 
         # starting frame image show
-        img_frame = tk.Frame(self.controller_frame, borderwidth=3)
-        img_frame.grid(row=0, column=1, sticky='nw')
-        tk.Label(img_frame, text='Starting frame image:').grid(row=0, column=0, sticky='n')
-        self.starting_frame_canvas = tk.Canvas(img_frame, height=300, width=300,borderwidth=3 ,
+        self.img_frame = tk.Frame(self.controller_frame, borderwidth=3)
+        self.img_frame.grid(row=0, column=1, sticky='nw')
+        tk.Label(self.img_frame, text='Starting frame image:').grid(row=0, column=0, sticky='n')
+        self.starting_frame_canvas = tk.Canvas(self.img_frame, height=300, width=300,borderwidth=3 ,
                                                relief='raised')
         self.starting_frame_canvas.grid(row=1, column=0, sticky='n')
         self.starting_frame_canvas.create_image((150, 150), image=None)
@@ -135,11 +171,11 @@ class ViewPoint:
         # starting col slider
         self.init_slider(frame=self.sliders_boxes_frame, text='Starting column:', label_row=0, label_col=0,
                          label_sticky='we', scale_from=0, scale_to=10,
-                         resolution=1, index=COL_INDEX, color='pink', scale_row=1, scale_col=0,
+                         resolution=1, index=STARTING_COL_INDEX, color='pink', scale_row=1, scale_col=0,
                          scale_sticky='w')
 
         #  starting col text box
-        self.init_box(frame=self.sliders_boxes_frame, index=COL_INDEX, row=1, col=1)
+        self.init_box(frame=self.sliders_boxes_frame, index=STARTING_COL_INDEX, row=1, col=1)
 
         # angle slider
         self.init_slider(frame=self.sliders_boxes_frame, text='Angle:', label_row=2, label_col=0,
@@ -153,11 +189,11 @@ class ViewPoint:
         # starting frame slider
         self.init_slider(frame=self.sliders_boxes_frame, text='Starting frame:', label_row=4, label_col=0,
                          label_sticky='we', scale_from=0, scale_to=20,
-                         resolution=1, index=FRAME_INDEX, color='blue', scale_row=5, scale_col=0,
+                         resolution=1, index=STARTING_FRAME_INDEX, color='blue', scale_row=5, scale_col=0,
                          scale_sticky='w')
 
         #  starting frame text box
-        self.init_box(frame=self.sliders_boxes_frame, index=FRAME_INDEX, row=5, col=1)
+        self.init_box(frame=self.sliders_boxes_frame, index=STARTING_FRAME_INDEX, row=5, col=1)
 
         # output
         tk.Label(self.root, text='Output result').grid(row=0, column=1, sticky='ewns')
