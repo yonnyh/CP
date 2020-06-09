@@ -1,97 +1,172 @@
 import tkinter as tk
-from PIL import ImageTk, Image
+from tkinter import filedialog
+import skimage.io
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image, ImageTk
 
 COL_INDEX = 0
 ANGLE_INDEX = 1
 FRAME_INDEX = 2
 
 
+class ViewPoint:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.grid_columnconfigure(0, weight=0)
+        self.root.grid_columnconfigure(1, weight=1)
+        self.root.grid_rowconfigure(3, weight=1)
+        self.root.title("Viewpoint GUI")
+        self.text_box_vars = [tk.StringVar(), tk.StringVar(), tk.StringVar()]
+        self.sliders = []
+        self.images = []
+        self.tk_images = []
+        self.input_frame = None
+        self.output_frame = None
+        self.starting_frame_canvas = None
+        self.controller_frame = None
+        self.sliders_boxes_frame = None
 
+    def update_text_box(self, val, index):
+        self.text_box_vars[index].set(val)
+        if index == FRAME_INDEX and len(self.tk_images) != 0:
+            self.starting_frame_canvas.create_image((150, 150), image=self.tk_images[int(val)])
 
-def view_point():
-    def update_text_box(val, index):
-        text_box_vars[index].set(val)
-
-    def update_slider(index):
+    def update_slider(self, index):
         try:
-            sliders[index].set(float(text_box_vars[index].get()))
+            val = float(self.text_box_vars[index].get())
+            self.sliders[index].set(val)
+            if index == FRAME_INDEX and len(self.tk_images) != 0:
+                self.starting_frame_canvas.create_image((150, 150), image=self.tk_images[int(val)])
         except ValueError:
             pass
 
-    root = tk.Tk()
-    root.grid_rowconfigure(0, weight=1)
-    root.grid_columnconfigure(0, weight=1)
-    root.title("Viewpoint GUI")
-    sliders = []
-    text_box_vars = [tk.StringVar(), tk.StringVar(), tk.StringVar()]
+    def convert_to_uint8(self, image):
+        img = image - np.min(image)
+        return np.round(255 * img / np.max(img)).astype(np.uint8)
 
-    # input frame
-    tk.Label(root, text='Get input').grid(row=0, column=0, sticky='ew')
-    input_frame = tk.Frame(root, relief='raised', borderwidth=3)
-    tk.Checkbutton(input_frame, text='Make transfer motion', command=None).pack(side='right', padx=10, pady=10)
-    tk.Button(input_frame, text='Load images',  command=None).pack(side='right',padx=60, pady=25)
-    tk.Entry(input_frame, bd=5, width=50, command=None).pack(side='left')
-    input_frame.grid(row=1, column=0, sticky='ew')
+    def resize_image(self, image, max_width=300, max_height=300):
+        # resize
+        width, height = image.size
+        if width > max_width:
+            old_width = width
+            width = max_width
+            height = int(height * width / old_width)
+        if height > max_height:
+            old_height = height
+            height = max_height
+            width = int(width * height / old_height)
+        image = image.resize((width, height), Image.ANTIALIAS)
 
-    # controller frame
-    tk.Label(root, text='Viewpoint controller').grid(row=2, column=0, sticky='ew')
-    controller_frame = tk.Frame(root, relief='raised', borderwidth=3)
+        return ImageTk.PhotoImage(image)
 
-    # starting col slider
-    tk.Label(controller_frame, text='Starting column:').grid(row=0, column=0, sticky='we')
-    col_slider = tk.Scale(controller_frame, orient='horizontal', from_=0, to=10,
-                            resolution=1, command=lambda val: update_text_box(val, COL_INDEX),
-                          cursor='DOT',
-                            sliderlength=20,troughcolor='pink',length=150)
-    col_slider.grid(row=1, column=0, sticky='w')
-    sliders.append(col_slider)
+    def load_images(self, path=None):
+        if path is None:
+            directory = filedialog.askdirectory()
+        else:
+            directory = path
 
-    #  starting col text box
-    col_text_box = tk.Entry(controller_frame, width=10,bd=3, textvariable=text_box_vars[COL_INDEX])
-    col_text_box.grid(row=1, column=1, sticky='s')
-    text_box_vars[COL_INDEX].trace_add('write', lambda *args: update_slider(COL_INDEX))
+        if directory != '':
+            del self.tk_images[:]
+            files = sorted(os.listdir(directory))
+            first_img = skimage.io.imread(os.path.join(directory, files[0]))/255.0
+            self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(first_img))))
+            # update the sliders
+            self.sliders[FRAME_INDEX].configure(to=len(files) - 1)
+            self.sliders[COL_INDEX].configure(to=first_img.shape[1] - 1)
+            images = np.zeros(np.insert(first_img.shape, 0, len(files)))
+            images[0] = first_img
+            # read all images
+            for i in range(1, len(files)):
+                images[i] = skimage.io.imread(os.path.join(directory, files[i]))/255.0
+                self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(images[i]))))
 
-    # angle slider
-    tk.Label(controller_frame, text='Angle:').grid(row=3, column=0, sticky='we')
-    angle_slider = tk.Scale(controller_frame, orient='horizontal', from_=1, to=179,
-                          resolution=0.1, command=lambda val: update_text_box(val, ANGLE_INDEX),
-                          cursor='DOT',
-                          sliderlength=20, troughcolor='red', length=150)
-    angle_slider.grid(row=4, column=0, sticky='w')
-    sliders.append(angle_slider)
+    def init_slider(self, frame, text, label_row, label_col, label_sticky, scale_from,
+               scale_to, resolution, index, color, scale_row, scale_col, scale_sticky):
+        tk.Label(frame, text=text).grid(row=label_row, column=label_col, sticky=label_sticky)
+        slider = tk.Scale(frame, orient='horizontal', from_=scale_from, to=scale_to,
+                              resolution=resolution, command=lambda val: self.update_text_box(val, index),
+                              cursor='DOT',
+                              sliderlength=20, troughcolor=color, length=150)
+        self.sliders.append(slider)
+        slider.grid(row=scale_row, column=scale_col, sticky=scale_sticky)
 
-    #  angle text box
-    angle_text_box = tk.Entry(controller_frame, width=10, bd=3, textvariable=text_box_vars[ANGLE_INDEX])
-    angle_text_box.grid(row=4, column=1, sticky='s')
-    text_box_vars[ANGLE_INDEX].trace_add('write', lambda *args: update_slider(ANGLE_INDEX))
+    def init_box(self, frame, index, row, col):
+        col_text_box = tk.Entry(frame, width=10, bd=3, textvariable=self.text_box_vars[
+            index])
+        col_text_box.grid(row=row, column=col, sticky='s')
+        self.text_box_vars[COL_INDEX].trace_add('write', lambda *args: self.update_slider(index))
 
-    # starting frame slider
-    tk.Label(controller_frame, text='Starting frame:').grid(row=6, column=0, sticky='we')
-    frame_slider = tk.Scale(controller_frame, orient='horizontal', from_=0, to=20,
-                            resolution=1, command=lambda val: update_text_box(val, FRAME_INDEX),
-                            cursor='DOT',
-                            sliderlength=20, troughcolor='blue', length=150)
-    frame_slider.grid(row=7, column=0, sticky='w')
-    sliders.append(frame_slider)
+    def run(self):
 
-    #  starting frame text box
-    frame_text_box = tk.Entry(controller_frame, width=10, bd=3, textvariable=text_box_vars[FRAME_INDEX])
-    frame_text_box.grid(row=7, column=1, sticky='s')
-    text_box_vars[FRAME_INDEX].trace_add('write', lambda *args: update_slider(FRAME_INDEX))
+        # input frame
+        tk.Label(self.root, text='Get input').grid(row=0, column=0, sticky='ew')
+        self.input_frame = tk.Frame(self.root, relief='raised', borderwidth=3)
+        tk.Checkbutton(self.input_frame, text='Make transfer motion', command=None).pack(side='right', padx=10, pady=10)
+        tk.Button(self.input_frame, text='Load images',  command=self.load_images).pack(side='right',padx=60,
+                                                                                 pady=25)
+        # path input
+        path_entry = tk.Entry(self.input_frame, bd=5, width=50)
+        path_entry.pack(side='left')
+        tk.Button(self.input_frame, text='Load', command=lambda: self.load_images(path_entry.get())).pack(
+            side='left', padx=10, pady=20)
+        self.input_frame.grid(row=1, column=0, sticky='ew')
 
-    #  starting frame canvas TODO
+        # controller frame
+        tk.Label(self.root, text='Viewpoint controller').grid(row=2, column=0, sticky='ew')
+        self.controller_frame = tk.Frame(self.root, relief='raised', borderwidth=3)
+        self.controller_frame.grid(row=3, column=0, sticky='ew')
 
-    #groove, raised, ridge, solid, or sunken
-    # img = ImageTk.PhotoImage(Image.open("data/Banana/rsz_capture_00001.jpg"))
-    # canvas_frame = tk.Label(controller_frame, image=img,  highlightthickness=0, borderwidth=0)
-    # canvas_frame.grid(row=2, column=2, sticky='nsew')
+        # slider and box frame
+        self.sliders_boxes_frame = tk.Frame(self.controller_frame, relief='raised', borderwidth=3)
+        self.sliders_boxes_frame.grid(row=0, column=0, sticky='ew')
+        tk.Label(self.controller_frame, text='Viewpoint by angle:').grid(row=0, column=0, sticky='nw')
 
+        # starting frame image show
+        img_frame = tk.Frame(self.controller_frame, borderwidth=3)
+        img_frame.grid(row=0, column=1, sticky='nw')
+        tk.Label(img_frame, text='Starting frame image:').grid(row=0, column=0, sticky='n')
+        self.starting_frame_canvas = tk.Canvas(img_frame, height=300, width=300,borderwidth=3 ,
+                                               relief='raised')
+        self.starting_frame_canvas.grid(row=1, column=0, sticky='n')
+        self.starting_frame_canvas.create_image((150, 150), image=None)
 
-    controller_frame.grid(row=2, column=0, sticky='ew')
+        # starting col slider
+        self.init_slider(frame=self.sliders_boxes_frame, text='Starting column:', label_row=0, label_col=0,
+                         label_sticky='we', scale_from=0, scale_to=10,
+                         resolution=1, index=COL_INDEX, color='pink', scale_row=1, scale_col=0,
+                         scale_sticky='w')
 
+        #  starting col text box
+        self.init_box(frame=self.sliders_boxes_frame, index=COL_INDEX, row=1, col=1)
 
-    root.mainloop()
+        # angle slider
+        self.init_slider(frame=self.sliders_boxes_frame, text='Angle:', label_row=2, label_col=0,
+                         label_sticky='we', scale_from=1, scale_to=179,
+                         resolution=0.1, index=ANGLE_INDEX, color='red', scale_row=3, scale_col=0,
+                         scale_sticky='w')
+
+        #  angle text box
+        self.init_box(frame=self.sliders_boxes_frame, index=ANGLE_INDEX, row=3, col=1)
+
+        # starting frame slider
+        self.init_slider(frame=self.sliders_boxes_frame, text='Starting frame:', label_row=4, label_col=0,
+                         label_sticky='we', scale_from=0, scale_to=20,
+                         resolution=1, index=FRAME_INDEX, color='blue', scale_row=5, scale_col=0,
+                         scale_sticky='w')
+
+        #  starting frame text box
+        self.init_box(frame=self.sliders_boxes_frame, index=FRAME_INDEX, row=5, col=1)
+
+        # output
+        tk.Label(self.root, text='Output result').grid(row=0, column=1, sticky='ewns')
+        self.output_frame = tk.Frame(self.root, relief='raised', borderwidth=3, bg="blue")
+        self.output_frame.grid(row=1, column=1, sticky='ewns', rowspan=8, columnspan=3)
+
+        self.root.mainloop()
 
 
 if __name__ == '__main__':
-    view_point()
+    view_point = ViewPoint()
+    view_point.run()
