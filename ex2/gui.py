@@ -3,13 +3,11 @@ from tkinter import filedialog
 import skimage.io
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 from PIL import Image, ImageTk
 
 STARTING_COL_INDEX = 0
 ANGLE_INDEX = 1
 STARTING_FRAME_INDEX = 2
-
 
 
 class ViewPoint:
@@ -33,34 +31,42 @@ class ViewPoint:
         self.starting_col = None
         self.ending_frame = None
         self.ending_col = None
+        self.total_frame = None
+        self.output_canvas = None
 
     def choose_frames_loading(self):
         def save_and_close():
             self.starting_frame, self.starting_col = int(textbox_vars[0].get()), int(textbox_vars[1].get())
             self.ending_frame, self.ending_col = int(textbox_vars[2].get()),  int(textbox_vars[3].get())
             new_win.destroy()
-            # TODO calculate the output to show
+            self.update_text_box(self.starting_frame, STARTING_FRAME_INDEX)
+            self.update_text_box(self.starting_col, STARTING_COL_INDEX)
+            self.update_slider(STARTING_FRAME_INDEX)
+            self.update_slider(STARTING_COL_INDEX)
+            self.output_canvas.create_image((150, 150), image=self.tk_images[0])
+            # TODO calculate the output to show and update the angle
 
         textbox_vars = [tk.StringVar() for _ in range(4)]
         new_win = tk.Toplevel(self.root)
-        tk.Label(new_win, text='Enter initial viewpoint:').grid(row=0, column=0, sticky='w', columnspan=4)
+        tk.Label(new_win, text='Enter initial viewpoint:').grid(row=0, column=0, sticky='w', columnspan=5)
         # first frame
-        tk.Label(new_win, text='Starting frame:').grid(row=1, column=0, sticky='w')
-        tk.Entry(new_win, width=6, textvariable=textbox_vars[0]).grid(row=1, column=1)
+        tk.Label(new_win, text='Total frame number: ').grid(row=1, column=0, sticky='w')
+        tk.Label(new_win, width=6, text=str(self.total_frame), bg='red').grid(row=1, column=1)
+
+        tk.Label(new_win, text='Starting frame:').grid(row=2, column=0, sticky='w')
+        tk.Entry(new_win, width=6, textvariable=textbox_vars[0], bg='pink').grid(row=2, column=1)
         # first col
-        tk.Label(new_win, text='Starting column:').grid(row=1, column=2, sticky='w')
-        tk.Entry(new_win, width=6, textvariable=textbox_vars[1]).grid(row=1, column=3)
+        tk.Label(new_win, text='Starting column:').grid(row=2, column=2, sticky='w')
+        tk.Entry(new_win, width=6, textvariable=textbox_vars[1], bg='pink').grid(row=2, column=3)
 
         # last Frame
-        tk.Label(new_win, text='Ending frame:').grid(row=3, column=0, sticky='w')
-        tk.Entry(new_win, width=6, textvariable=textbox_vars[2]).grid(row=3, column=1)
+        tk.Label(new_win, text='Ending frame:').grid(row=4, column=0, sticky='w')
+        tk.Entry(new_win, width=6, textvariable=textbox_vars[2], bg='cyan').grid(row=4, column=1)
 
-        # last rol
-        tk.Label(new_win, text='Ending column:').grid(row=3, column=2, sticky='w')
-        tk.Entry(new_win, width=6, textvariable=textbox_vars[3]).grid(row=3, column=3)
-        tk.Button(new_win, text='Run', command=save_and_close).grid(row=4, column=0, columnspan=3)
-
-        pass
+        # last col
+        tk.Label(new_win, text='Ending column:').grid(row=4, column=2, sticky='w')
+        tk.Entry(new_win, width=6, textvariable=textbox_vars[3], bg='cyan').grid(row=4, column=3)
+        tk.Button(new_win, text='Run', command=save_and_close).grid(row=5, column=0, columnspan=3)
 
     def update_text_box(self, val, index):
         self.text_box_vars[index].set(val)
@@ -104,16 +110,16 @@ class ViewPoint:
         if directory != '':
             del self.tk_images[:]
             files = sorted(os.listdir(directory))
-
+            self.total_frame = len(files)
             first_img = skimage.io.imread(os.path.join(directory, files[0]))/255.0
             self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(first_img))))
             # update the sliders
             self.sliders[STARTING_FRAME_INDEX].configure(to=self.ending_frame)
             self.sliders[STARTING_COL_INDEX].configure(to=first_img.shape[1] - 1)
-            images = np.zeros(np.insert(first_img.shape, 0, len(files)))
+            images = np.zeros(np.insert(first_img.shape, 0, self.total_frame))
             images[0] = first_img
             # read all images
-            for i in range(1,len(files)):
+            for i in range(1, self.total_frame):
                 images[i] = skimage.io.imread(os.path.join(directory, files[i]))/255.0
                 self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(images[i]))))
             self.choose_frames_loading()
@@ -197,8 +203,11 @@ class ViewPoint:
 
         # output
         tk.Label(self.root, text='Output result').grid(row=0, column=1, sticky='ewns')
-        self.output_frame = tk.Frame(self.root, relief='raised', borderwidth=3, bg="blue")
+        self.output_frame = tk.Frame(self.root, relief='raised', borderwidth=3)
         self.output_frame.grid(row=1, column=1, sticky='ewns', rowspan=8, columnspan=3)
+        self.output_canvas = tk.Canvas(self.output_frame, height=300, width=300,borderwidth=3 ,relief='raised')
+        self.output_canvas.grid(row=1, column=0, sticky='n')
+        self.output_canvas.create_image((150, 150), image=None)
 
         self.root.mainloop()
 
