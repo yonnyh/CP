@@ -1,4 +1,5 @@
 from tkinter import *
+import numpy as np
 from skimage.io import imread, imsave
 import sys
 import numpy as np

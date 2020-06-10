@@ -4,6 +4,7 @@ import skimage.io
 import os
 import numpy as np
 from PIL import Image, ImageTk
+import ex2.light_field as lf
 
 COL_INDEX = 0
 ANGLE_INDEX = 1
@@ -22,7 +23,6 @@ class ViewPoint:
         self.root.title("Viewpoint GUI")
         self.text_box_vars = [tk.StringVar() for _ in range(3)]
         self.sliders = []
-        self.images = []
         self.tk_images = []
         self.input_frame = None
         self.output_frame = None
@@ -37,16 +37,34 @@ class ViewPoint:
         self.starting_frame_canvas = None
         self.output_canvas = None
 
+        self.images = []
+        self.translate_only = True
+        self.lf_object = None
+
+    def _not_translation_only(self):
+        self.translate_only = False
+
+    def _init_lf_object(self):
+        self.lf_object = lf.LightFileViewPoint(self.images)
+        self.lf_object.calc_homographies()
+        if not self.translate_only:
+            self.lf_object.apply_homographies_on_images()
+
     def choose_frames_loading(self):
         def save_and_close():
-            self.starting_frame_index, self.starting_col_index = int(textbox_vars[0].get()), int(textbox_vars[1].get())
-            self.ending_frame_index, self.ending_col_index = int(textbox_vars[2].get()), int(textbox_vars[3].get())
+            self.starting_frame_index, self.starting_col_index = \
+                int(textbox_vars[0].get()), int(textbox_vars[1].get())
+            self.ending_frame_index, self.ending_col_index = \
+                int(textbox_vars[2].get()), int(textbox_vars[3].get())
+
             new_win.destroy()
             self.update_text_box(self.starting_frame_index, FRAME_INDEX)
             self.update_text_box(self.starting_col_index, COL_INDEX)
             self.update_slider(FRAME_INDEX)
             self.update_slider(COL_INDEX)
             self.output_canvas.create_image((150, 150), image=self.tk_images[0])
+
+            self._init_lf_object()
             # TODO calculate the output to show and update the angle
 
         textbox_vars = [tk.StringVar() for _ in range(4)]
@@ -110,22 +128,27 @@ class ViewPoint:
         else:
             directory = path
 
-        if directory != '':
-            del self.tk_images[:]
-            files = sorted(os.listdir(directory))
-            self.total_frame = len(files)
-            first_img = skimage.io.imread(os.path.join(directory, files[0]))/255.0
-            self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(first_img))))
-            # update the sliders
-            self.sliders[FRAME_INDEX].configure(to=self.ending_frame_index)
-            self.sliders[COL_INDEX].configure(to=first_img.shape[1] - 1)
-            images = np.zeros(np.insert(first_img.shape, 0, self.total_frame))
-            images[0] = first_img
-            # read all images
-            for i in range(1, self.total_frame):
-                images[i] = skimage.io.imread(os.path.join(directory, files[i]))/255.0
-                self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(images[i]))))
-            self.choose_frames_loading()
+        if directory == '':
+            raise IOError("Problem in loading images from this directory")
+
+        del self.tk_images[:]
+        files = sorted(os.listdir(directory))
+        self.total_frame = len(files)
+        first_img = skimage.io.imread(os.path.join(directory, files[0]))/255.0
+        self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(first_img))))
+
+        # update the sliders
+        self.sliders[FRAME_INDEX].configure(to=self.ending_frame_index)
+        self.sliders[COL_INDEX].configure(to=first_img.shape[1] - 1)
+        self.images = np.zeros(np.insert(first_img.shape, 0, self.total_frame))
+        self.images[0] = first_img
+
+        # read all images
+        for i in range(1, self.total_frame):
+            self.images[i] = skimage.io.imread(os.path.join(directory, files[i]))/255.0
+            self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(self.images[i]))))
+
+        self.choose_frames_loading()
 
     def init_slider(self, frame, text, label_row, label_col, label_sticky, scale_from, scale_to,
                     resolution, index, color, scale_row, scale_col, scale_sticky):
@@ -147,8 +170,9 @@ class ViewPoint:
 
         # input frame
         tk.Label(self.root, text='Get input').grid(row=0, column=0, sticky='we')
-        self.input_frame = tk.Frame(self.root, relief='raised',borderwidth=3)
-        tk.Checkbutton(self.input_frame, text='Make transfer motion', command=None).pack(side='right', padx=10, pady=10)
+        self.input_frame = tk.Frame(self.root, relief='raised', borderwidth=3)
+        tk.Checkbutton(self.input_frame, text='Make transfer motion',
+                       command=self._not_translation_only).pack(side='right', padx=10, pady=10)
         tk.Button(self.input_frame, text='Load images',  command=self.load_images).pack(side='right',padx=60,
                                                                                  pady=25)
         # path input
@@ -396,6 +420,7 @@ class Focus:
         self.output_canvas.create_image((150, 150), image=None)
 
         self.root.mainloop()
+
 
 if __name__ == '__main__':
     view_point = ViewPoint()

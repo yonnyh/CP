@@ -8,36 +8,35 @@ from skimage.transform import warp
 from skimage.draw import line_aa
 
 
+def get_images_paths(dir_path):
+    f = []
+    for (dirpath, dirnames, filenames) in walk(dir_path):
+        f.extend(filenames)
+        break
+    return sorted(f)
+
+
 class LightField:
-    def __init__(self, dir_path, apply_homographies=True):
-        self.dir_path = dir_path
-        self.images_paths = self._get_images_paths()
-        self.apply_homographies = apply_homographies
+    def __init__(self, images):
+        self.images = images
+        for i, im in enumerate(self.images):
+            if i == 0:
+                self.h, self.w = im.shape[:2]
+            else:
+                if self.h != im.shape[0] or self.w != im.shape[1]:
+                    raise ValueError("Images Have No Same Shape")
+        self.num_of_frames = len(self.images)
 
-        # Load homographies to field self.Hs and images to field self.images
-        # Note: images are rotated and y-axis-translated only if field
-        # self.apply_homographies is True
-        self._calc_homographies()
-        self._load_images()
+        self.default_shift = 10  # in case user doesn't calc homographies
+        self.relative_shifts = [self.default_shift *
+                                i for i in range(self.num_of_frames)]
+        self.Hs = None
 
-        # Another fields:
-        # height and width of images: self.h, self.w
-        # number of frames: self.num_of_frames
-        # x-axis-translation list, relative to first frame: self.relative_shifts
-
-    def _get_images_paths(self):
-        f = []
-        for (dirpath, dirnames, filenames) in walk(self.dir_path):
-            f.extend(filenames)
-            break
-        return sorted(f)
-
-    def _calc_homographies(self):
+    def calc_homographies(self):
         points_and_descriptors = []
-        for im in self.images_paths:
-            image = sol4_utils.read_image(self.dir_path + im, 1)
-            self.h, self.w = image.shape
-            pyramid, _ = sol4_utils.build_gaussian_pyramid(image, 3, 7)
+        for i, im in enumerate(self.images):
+            gray_im = np.dot(im[..., :3], [0.2989, 0.5870, 0.1140])
+            pyramid, _ = sol4_utils.build_gaussian_pyramid(gray_im, 3, 7)
             points_and_descriptors.append(find_features(pyramid))
 
         # Compute homographies between successive pairs of images.
@@ -56,30 +55,28 @@ class LightField:
             H12, inliers = ransac_homography(points1, points2, 100, 6)
             Hs.append(H12)
 
-        self.num_of_frames = len(Hs) + 1
         self.Hs = np.stack(accumulate_homographies(Hs, (len(Hs) - 1) // 2))
         self.relative_shifts = [int(w) - int(self.Hs[0, 0, -1]) for w in
                                 self.Hs[:, 0, -1]]
 
-    def _load_images(self):
+    def apply_homographies_on_images(self):
         """
         Load images such that they all rotated and y-axis-aligned related to
             the middle image
         """
-        self.images = []
+        if self.Hs is None:
+            self.calc_homographies()
+
         for i in range(self.num_of_frames):
-            img = plt.imread(self.dir_path + self.images_paths[i])
-            if self.apply_homographies:
-                rot_y_H = np.copy(self.Hs[i])
-                rot_y_H[0, -1] = 0
-                self.images.append(warp(img, rot_y_H, output_shape=img.shape))
-            else:
-                self.images.append(img.astype(np.float64) / 255)
+            rot_y_H = np.copy(self.Hs[i])
+            rot_y_H[0, -1] = 0
+            self.images[i] = (warp(self.images[i], rot_y_H,
+                                   output_shape=self.images[i].shape))
 
 
 class LightFileViewPoint(LightField):
-    def __init__(self, dir_path, apply_homographies=True):
-        super().__init__(dir_path, apply_homographies)
+    def __init__(self, dir_path):
+        super().__init__(dir_path)
         self._save_shifted()
 
     def _save_shifted(self):
@@ -156,8 +153,8 @@ class LightFileViewPoint(LightField):
 
 
 class LightFieldRefocus(LightField):
-    def __init__(self, dir_path, apply_homographies=False):
-        super().__init__(dir_path, apply_homographies)
+    def __init__(self, dir_path):
+        super().__init__(dir_path)
 
     def refocus(self, shift_size, remove_occ):
         shifted_images = np.zeros((self.num_of_frames, self.h, self.w, 3))
