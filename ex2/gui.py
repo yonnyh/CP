@@ -26,7 +26,6 @@ class ViewPoint:
         self.tk_images = []
         self.input_frame = None
         self.output_frame = None
-        self.starting_frame_canvas = None
         self.controller_frame = None
         self.sliders_boxes_frame = None
         self.img_frame = None
@@ -35,6 +34,7 @@ class ViewPoint:
         self.ending_frame_index = None
         self.ending_col_index = None
         self.total_frame = None
+        self.starting_frame_canvas = None
         self.output_canvas = None
 
     def choose_frames_loading(self):
@@ -146,8 +146,8 @@ class ViewPoint:
     def run(self):
 
         # input frame
-        tk.Label(self.root, text='Get input').grid(row=0, column=0, sticky='ew')
-        self.input_frame = tk.Frame(self.root, relief='raised', borderwidth=3)
+        tk.Label(self.root, text='Get input').grid(row=0, column=0, sticky='we')
+        self.input_frame = tk.Frame(self.root, relief='raised',borderwidth=3)
         tk.Checkbutton(self.input_frame, text='Make transfer motion', command=None).pack(side='right', padx=10, pady=10)
         tk.Button(self.input_frame, text='Load images',  command=self.load_images).pack(side='right',padx=60,
                                                                                  pady=25)
@@ -207,8 +207,9 @@ class ViewPoint:
         # output
         tk.Label(self.root, text='Output result').grid(row=0, column=1, sticky='ewns')
         self.output_frame = tk.Frame(self.root, relief='raised', borderwidth=3)
-        self.output_frame.grid(row=1, column=1, sticky='ewns', rowspan=8, columnspan=3)
-        self.output_canvas = tk.Canvas(self.output_frame, height=300, width=300,borderwidth=3 ,relief='raised')
+        self.output_frame.grid(row=1, column=1, sticky='ewns', rowspan=4, columnspan=3)
+        self.output_canvas = tk.Canvas(self.output_frame, height=300, width=300,borderwidth=3 ,
+                                       relief='raised')
         self.output_canvas.grid(row=1, column=0, sticky='n')
         self.output_canvas.create_image((150, 150), image=None)
 
@@ -321,7 +322,6 @@ class Focus:
             self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(first_img))))
             # update the sliders
             # self.sliders[FOCUS_SLIDER].configure(to=10)
-            # self.sliders[COL_INDEX].configure(to=first_img.shape[1] - 1)
             images = np.zeros(np.insert(first_img.shape, 0, self.total_frame))
             images[0] = first_img
             # read all images
@@ -369,7 +369,7 @@ class Focus:
 
         # focus slider
         self.init_slider(frame=self.controller_frame, text='Focus:', label_row=0, label_col=0,
-                         label_sticky='w', scale_from=-10, scale_to=10,
+                         label_sticky='w', scale_from=0, scale_to=100,
                          resolution=0.1, index=FOCUS_SLIDER, color='pink', scale_row=1, scale_col=0,
                          scale_sticky='s')
 
@@ -398,7 +398,7 @@ class Focus:
         self.root.mainloop()
 
 if __name__ == '__main__':
-    # view_point = ViewPoint()
-    # view_point.run()
-    focus = Focus()
-    focus.run()
+    view_point = ViewPoint()
+    view_point.run()
+    # focus = Focus()
+    # focus.run()
