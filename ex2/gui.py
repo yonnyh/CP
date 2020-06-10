@@ -65,6 +65,7 @@ class ViewPoint:
             self.output_canvas.create_image((150, 150), image=self.tk_images[0])
 
             self._init_lf_object()
+
             # TODO calculate the output to show and update the angle
 
         textbox_vars = [tk.StringVar() for _ in range(4)]
