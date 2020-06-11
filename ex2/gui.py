@@ -33,6 +33,7 @@ class ViewPoint:
         self.starting_col_index = None
         self.ending_frame_index = None
         self.ending_col_index = None
+        self.angle = None
         self.total_frame = None
         self.starting_frame_canvas = None
         self.output_canvas = None
@@ -52,21 +53,28 @@ class ViewPoint:
 
     def choose_frames_loading(self):
         def save_and_close():
+            # Get frames and columns from user
             self.starting_frame_index, self.starting_col_index = \
                 int(textbox_vars[0].get()), int(textbox_vars[1].get())
             self.ending_frame_index, self.ending_col_index = \
                 int(textbox_vars[2].get()), int(textbox_vars[3].get())
 
-            new_win.destroy()
+            # Initialize LightField object, and calculate its initial angle
+            self._init_lf_object()
+            self.angle = self.lf_object.frames_to_angle(
+                self.starting_frame_index, self.starting_col_index,
+                self.ending_frame_index, self.ending_col_index)
+
+            # Update sliders and boxes
             self.update_text_box(self.starting_frame_index, FRAME_INDEX)
             self.update_text_box(self.starting_col_index, COL_INDEX)
+            self.update_text_box(self.angle, ANGLE_INDEX)
             self.update_slider(FRAME_INDEX)
             self.update_slider(COL_INDEX)
-            self.output_canvas.create_image((150, 150), image=self.tk_images[0])
+            self.update_slider(ANGLE_INDEX)
+            # self.output_canvas.create_image((150, 150), image=self.tk_images[0])
 
-            self._init_lf_object()
-
-            # TODO calculate the output to show and update the angle
+            new_win.destroy()
 
         textbox_vars = [tk.StringVar() for _ in range(4)]
         new_win = tk.Toplevel(self.root)
@@ -139,7 +147,7 @@ class ViewPoint:
         self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(first_img))))
 
         # update the sliders
-        self.sliders[FRAME_INDEX].configure(to=self.ending_frame_index)
+        self.sliders[FRAME_INDEX].configure(to=self.total_frame - 1)
         self.sliders[COL_INDEX].configure(to=first_img.shape[1] - 1)
         self.images = np.zeros(np.insert(first_img.shape, 0, self.total_frame))
         self.images[0] = first_img
@@ -153,9 +161,16 @@ class ViewPoint:
 
     def init_slider(self, frame, text, label_row, label_col, label_sticky, scale_from, scale_to,
                     resolution, index, color, scale_row, scale_col, scale_sticky):
+        def slider_command(val):
+            self.update_text_box(val, index)
+            output = self.lf_object.calculate_view_point_by_angle(
+                self.starting_frame_index, self.starting_col_index, self.angle)
+            # self.output_canvas.create_image(ImageTk.PhotoImage(Image.fromarray(self.convert_to_uint8(output))))
+            self.output_canvas.create_image(self.resize_image(output))
+
         tk.Label(frame, text=text).grid(row=label_row, column=label_col, sticky=label_sticky)
         slider = tk.Scale(frame, orient='horizontal', from_=scale_from, to=scale_to,
-                              resolution=resolution, command=lambda val: self.update_text_box(val, index),
+                              resolution=resolution, command=slider_command,
                               cursor='DOT',
                               sliderlength=20, troughcolor=color, length=150)
         self.sliders.append(slider)
@@ -166,6 +181,7 @@ class ViewPoint:
             index])
         text_box.grid(row=row, column=col, sticky='s')
         self.text_box_vars[index].trace_add('write', lambda *args: self.update_slider(index))
+        # todo: box has to create outputs as slider does
 
     def run(self):
 

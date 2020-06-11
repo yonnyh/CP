@@ -8,14 +8,6 @@ from skimage.transform import warp
 from skimage.draw import line_aa
 
 
-def get_images_paths(dir_path):
-    f = []
-    for (dirpath, dirnames, filenames) in walk(dir_path):
-        f.extend(filenames)
-        break
-    return sorted(f)
-
-
 class LightField:
     def __init__(self, images):
         self.images = images
@@ -75,8 +67,8 @@ class LightField:
 
 
 class LightFileViewPoint(LightField):
-    def __init__(self, dir_path):
-        super().__init__(dir_path)
+    def __init__(self, images):
+        super().__init__(images)
         self._save_shifted()
 
     def _save_shifted(self):
@@ -99,7 +91,7 @@ class LightFileViewPoint(LightField):
         return canvas[:, non_zeros_col_ides, :]
 
     def calculate_view_point_by_frames(self, frame1, col1, frame2, col2,
-                                       debug=True):
+                                       debug=False, by_angle=True):
         # Validity check
         for f in [frame1, frame2]:
             if f >= self.num_of_frames:
@@ -110,19 +102,34 @@ class LightFileViewPoint(LightField):
                 raise IndexError(f"Images width is {self.w}, and {col} is "
                                  f"out of range")
 
-        frames, h, w, c = self.shifted.shape
-        mask = np.zeros((frames, w))
-        rr, cc, val = line_aa(frame1, self.relative_shifts[frame1] + col1,
-                              frame2, self.relative_shifts[frame2] + col2)
-        mask[rr, cc] = val
+        if by_angle:
+            angle = self.frames_to_angle(frame1, col1, frame2, col2)
+            return self.calculate_view_point_by_angle(frame1, col1, angle)
 
-        if debug:
-            plt.imshow(mask)
-            plt.show()
+        else:
+            frames, h, w, c = self.shifted.shape
+            mask = np.zeros((frames, w))
+            rr, cc, val = line_aa(frame1, self.relative_shifts[frame1] + col1,
+                                  frame2, self.relative_shifts[frame2] + col2)
+            mask[rr, cc] = val
 
-        return self.view_point_by_mask(mask)
+            if debug:
+                plt.imshow(mask)
+                plt.show()
 
-    def calculate_view_point_by_angle(self, frame, col, angle_deg, debug=True):
+            return self.view_point_by_mask(mask)
+
+    def frames_to_angle(self, frame1, col1, frame2, col2):
+        """Return angle in range [0, 180]"""
+        x = frame2 - frame1
+        y = self.relative_shifts[frame2] + col2 - \
+            (self.relative_shifts[frame1] + col1)
+        return np.rad2deg(np.arctan2(y, x)) + 90
+
+    def calculate_view_point_by_angle(self, frame, col, angle_deg, debug=False):
+        """
+        angle_deg in range [0, 180]
+        """
         # Validity check
         if frame >= self.num_of_frames:
             raise IndexError(f"There are only {self.num_of_frames} frames,"
