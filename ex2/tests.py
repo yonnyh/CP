@@ -32,14 +32,14 @@ def test_calculate_view_point_by_frames(apply_hs=False):
     lf.calc_homographies()
     if apply_hs:
         lf.apply_homographies_on_images()
-    # out = lf.calculate_view_point_by_frames(0, 0, 21, 767)
+    out = lf.calculate_view_point_by_frames(0, 0, 21, 767)
     # out = lf.calculate_view_point_by_frames(0, 300, 21, 300)
     # out = lf.calculate_view_point_by_frames(5, 0, 10, 767)
     # out = lf.calculate_view_point_by_frames(0, 700, 20, 0)
 
-    by_frame = lf.calculate_view_point_by_frames(0, 700, 20, 0, by_angle=False)
-    by_angle = lf.calculate_view_point_by_frames(0, 700, 20, 0, by_angle=True)
-    out = np.hstack((by_frame, by_angle))
+    # by_frame = lf.calculate_view_point_by_frames(0, 700, 20, 0, by_angle=False)
+    # by_angle = lf.calculate_view_point_by_frames(0, 700, 20, 0, by_angle=True)
+    # out = np.hstack((by_frame, by_angle))
 
     # lf = LightFileViewPoint(NAHLAOT)
     # out = lf.calculate_view_point_by_frames(0, 0, 60, 729)
@@ -77,7 +77,7 @@ def test_calculate_view_point_by_frames_animate(apply_hs=True):
 
 
 def test_calculate_view_point_by_angle():
-    lf = LightFileViewPoint(BANANA)
+    lf = LightFileViewPoint(det_images_from_path(BANANA))
     out = lf.calculate_view_point_by_angle(0, 0, 179)
     plt.imshow(out)
     plt.show()
@@ -121,12 +121,12 @@ def test_refocus_by_object(remove_occ=False, debug=True):
 if __name__ == '__main__':
     # test_frames_to_angle()
     # test_calculate_view_point_by_frames(apply_hs=True)
-    # test_calculate_view_point_by_frames(apply_hs=False)
+    test_calculate_view_point_by_frames(apply_hs=False)
     # test_calculate_view_point_by_frames_animate(apply_hs=True)
     # test_calculate_view_point_by_frames_animate(apply_hs=False)
     # test_calculate_view_point_by_angle()
     # test_shift()
     # test_refocus_by_shift(remove_occ=True)
     # test_refocus_by_shift(remove_occ=False)
-    test_refocus_by_object(remove_occ=False, debug=True)
+    # test_refocus_by_object(remove_occ=False, debug=True)
 

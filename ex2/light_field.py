@@ -6,7 +6,7 @@ from ex2.impro_4 import *
 from os import walk
 from scipy.ndimage.interpolation import shift
 from skimage.transform import warp
-from skimage.draw import rectangle_perimeter, line_aa
+from skimage.draw import line_aa, line
 from skimage.filters import sobel
 from cv2 import warpAffine, BORDER_TRANSPARENT
 
@@ -83,18 +83,26 @@ class LightFileViewPoint(LightField):
             x_shift = int(self.relative_shifts[i])
             self.shifted[i, :, x_shift:self.w + x_shift, :] = self.images[i]
 
-    def view_point_by_mask(self, mask):
+    def view_point_by_mask(self, mask, fast=True):
         _, h, w, c = self.shifted.shape
-        canvas = np.zeros((h, w, c))
-        for i in range(self.num_of_frames):
-            canvas = canvas + self.shifted[i, :, :, :] * mask[i, :][:, None]
+        if fast:
+            slices = []
+            for i in range(self.num_of_frames):
+                slices.append(np.transpose(self.shifted[i, :, mask[i] == 1, :],
+                                           (1, 0, 2)))
+            return np.hstack(slices)
 
-        # Crop canvas to remove zeros-pad
-        non_zeros_col_ides = np.where(np.sum(canvas, axis=(0, 2)) > 0)[0]
-        return canvas[:, non_zeros_col_ides, :]
+        else:
+            canvas = np.zeros((h, w, c))
+            for i in range(self.num_of_frames):
+                canvas = canvas + self.shifted[i, :, :, :] * mask[i, :][:, None]
+
+            # Crop canvas to remove zeros-pad
+            non_zeros_col_ides = np.where(np.sum(canvas, axis=(0, 2)) > 0)[0]
+            return canvas[:, non_zeros_col_ides, :]
 
     def calculate_view_point_by_frames(self, frame1, col1, frame2, col2,
-                                       debug=False, by_angle=True):
+                                       debug=False, by_angle=True, fast=True):
         # Validity check
         for f in [frame1, frame2]:
             if f >= self.num_of_frames:
@@ -112,15 +120,21 @@ class LightFileViewPoint(LightField):
         else:
             frames, h, w, c = self.shifted.shape
             mask = np.zeros((frames, w))
-            rr, cc, val = line_aa(frame1, self.relative_shifts[frame1] + col1,
-                                  frame2, self.relative_shifts[frame2] + col2)
-            mask[rr, cc] = val
+
+            if not fast:
+                rr, cc, val = line_aa(frame1, self.relative_shifts[frame1] + col1,
+                                      frame2, self.relative_shifts[frame2] + col2)
+                mask[rr, cc] = val
+            else:
+                rr, cc = line(frame1, self.relative_shifts[frame1] + col1,
+                              frame2, self.relative_shifts[frame2] + col2)
+                mask[rr, cc] = 1
 
             if debug:
                 plt.imshow(mask)
                 plt.show()
 
-            return self.view_point_by_mask(mask)
+            return self.view_point_by_mask(mask, fast=fast)
 
     def frames_to_angle(self, frame1, col1, frame2, col2):
         """Return angle in range [0, 180]"""
@@ -129,7 +143,8 @@ class LightFileViewPoint(LightField):
             (self.relative_shifts[frame1] + col1)
         return np.rad2deg(np.arctan2(y, x)) + 90
 
-    def calculate_view_point_by_angle(self, frame, col, angle_deg, debug=False):
+    def calculate_view_point_by_angle(self, frame, col, angle_deg, debug=False,
+                                      fast=True):
         """
         angle_deg in range [0, 180]
         """
@@ -149,17 +164,23 @@ class LightFileViewPoint(LightField):
         angle_rad = np.deg2rad(angle_deg - 90)
         col2 = self.relative_shifts[frame] + col + \
                (self.num_of_frames - frame) * np.tan(angle_rad)
-        rr, cc, val = line_aa(frame, col, self.num_of_frames - 1, int(col2))
-        valid = np.where((cc >= 0) & (cc < self.shifted.shape[2]))[0]
-        rr_valid, cc_valid, val_valid = rr[valid], cc[valid], val[valid]
 
-        mask[rr_valid, cc_valid] = val_valid
+        if not fast:
+            rr, cc, val = line_aa(frame, col, self.num_of_frames - 1, int(col2))
+            valid = np.where((cc >= 0) & (cc < self.shifted.shape[2]))[0]
+            rr_valid, cc_valid, val_valid = rr[valid], cc[valid], val[valid]
+            mask[rr_valid, cc_valid] = val_valid
+        else:
+            rr, cc = line(frame, col, self.num_of_frames - 1, int(col2))
+            valid = np.where((cc >= 0) & (cc < self.shifted.shape[2]))[0]
+            rr_valid, cc_valid = rr[valid], cc[valid]
+            mask[rr_valid, cc_valid] = 1
 
         if debug:
             plt.imshow(mask)
             plt.show()
 
-        return self.view_point_by_mask(mask)
+        return self.view_point_by_mask(mask, fast=fast)
 
 
 class LightFieldRefocus(LightField):
