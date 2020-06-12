@@ -1,11 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from matplotlib.animation import FuncAnimation, FFMpegWriter
 from ex2.impro_4 import *
 from os import walk
 from scipy.ndimage.interpolation import shift
 from skimage.transform import warp
-from skimage.draw import line_aa
+from skimage.draw import rectangle_perimeter, line_aa
+from skimage.filters import sobel
+from cv2 import warpAffine, BORDER_TRANSPARENT
 
 
 class LightField:
@@ -19,7 +22,7 @@ class LightField:
                     raise ValueError("Images Have No Same Shape")
         self.num_of_frames = len(self.images)
 
-        self.default_shift = 10  # in case user doesn't calc homographies
+        self.default_shift = 1  # in case user doesn't calc homographies
         self.relative_shifts = [self.default_shift *
                                 i for i in range(self.num_of_frames)]
         self.Hs = None
@@ -163,11 +166,36 @@ class LightFieldRefocus(LightField):
     def __init__(self, dir_path):
         super().__init__(dir_path)
 
-    def refocus(self, shift_size, remove_occ):
+    def refocus_by_shift(self, shift_size, remove_occ):
+        """Shift frames related to center-frame"""
+        centered_shifts = np.array(self.relative_shifts) - \
+                          self.relative_shifts[(self.num_of_frames - 1) // 2]
         shifted_images = np.zeros((self.num_of_frames, self.h, self.w, 3))
         for i in range(self.num_of_frames):
-            x_shift = self.Hs[i, 0, -1] * shift_size
-            shifted_images[i, :, :, :] = shift(self.images[i], [0, x_shift, 0])
+            M = np.float32([[1, 0, shift_size * centered_shifts[i]],
+                            [0, 1, 0]])
+            shifted_images[i] = warpAffine(self.images[i], M, (self.w, self.h),
+                                           borderMode=BORDER_TRANSPARENT)
         if remove_occ:
-            return np.median(shifted_images, axis=0)
-        return np.mean(shifted_images, axis=0)
+            return np.median(shifted_images, axis=0) * 255
+        return np.mean(shifted_images, axis=0) * 255
+
+    def refocus_by_object(self, up, left, down, right, remove_occ,
+                          range_to_scan=4, num_of_intervals=10, debug=False):
+        """Maximise edges in selected area"""
+        def evaluate_edges(img):
+            edges_img = sobel(img[up:down, left:right])
+            return np.sum(edges_img)
+
+        intervals = np.linspace(0, range_to_scan, num_of_intervals)
+        eva_list = np.zeros_like(intervals)
+        for i in range(num_of_intervals):
+            refocused = self.refocus_by_shift(intervals[i], remove_occ)
+            gray_refocused = np.dot(refocused[..., :3], [0.2989, 0.5870, 0.1140])
+            eva_list[i] = (evaluate_edges(gray_refocused))
+
+        if debug:
+            plt.plot(eva_list)
+            plt.show()
+
+        return self.refocus_by_shift(intervals[np.argmax(eva_list)], remove_occ)

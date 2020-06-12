@@ -91,22 +91,42 @@ def test_shift():
     plt.show()
 
 
-def test_refocus(remove_occ=False):
-    # lf = LightFieldRefocus(CHESS_S)
-    lf = LightFieldRefocus(BANANA)
-    out = lf.refocus(3, remove_occ)
+def test_refocus_by_shift(remove_occ=False):
+    lf = LightFieldRefocus(det_images_from_path(CHESS_S))
+    # lf = LightFieldRefocus(det_images_from_path(BANANA))
+    out = lf.refocus_by_shift(3, remove_occ)
     plt.imshow(out)
     plt.show()
+
+
+def test_refocus_by_object(remove_occ=False, debug=True):
+    def display_borders(img, u, l, d, r):
+        rect = patches.Rectangle((l, u), r - l, d - u, linewidth=2,
+                                 edgecolor='r', facecolor='none')
+        plt.imshow(img)
+        plt.gca().add_patch(rect)
+        plt.show()
+
+    lf = LightFieldRefocus(det_images_from_path(CHESS_S))
+    # lf = LightFieldRefocus(det_images_from_path(BANANA))
+
+    # up, left, down, right = 110, 900, 150, 960
+    up, left, down, right = 350, 950, 430, 1030
+    out = lf.refocus_by_object(up, left, down, right, remove_occ, debug=debug)
+    display_borders(out, up, left, down, right)
+    # plt.imshow(out)
+    # plt.show()
 
 
 if __name__ == '__main__':
     # test_frames_to_angle()
     # test_calculate_view_point_by_frames(apply_hs=True)
-    test_calculate_view_point_by_frames(apply_hs=False)
+    # test_calculate_view_point_by_frames(apply_hs=False)
     # test_calculate_view_point_by_frames_animate(apply_hs=True)
     # test_calculate_view_point_by_frames_animate(apply_hs=False)
     # test_calculate_view_point_by_angle()
     # test_shift()
-    # test_refocus(remove_occ=False)
-    # test_refocus(remove_occ=True)
+    # test_refocus_by_shift(remove_occ=True)
+    # test_refocus_by_shift(remove_occ=False)
+    test_refocus_by_object(remove_occ=False, debug=True)
 
