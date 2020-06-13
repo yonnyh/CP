@@ -75,13 +75,19 @@ class LightFileViewPoint(LightField):
         self._save_shifted()
 
     def _save_shifted(self):
-        """Assumes scened was taken from left to right (first x-translation is
-        the smallest)"""
-        self.shifted = np.zeros((self.num_of_frames, self.h,
-                                 self.w + self.relative_shifts[-1], 3))
+        if self.Hs is None:
+            self.calc_homographies()
+
+        canvas_w = self.w + abs(self.relative_shifts[-1])
+        self.shifted = np.zeros((self.num_of_frames, self.h, canvas_w, 3))
         for i in range(self.num_of_frames):
             x_shift = int(self.relative_shifts[i])
-            self.shifted[i, :, x_shift:self.w + x_shift, :] = self.images[i]
+            if x_shift > 0:
+                start = x_shift
+            else:
+                start = abs(self.relative_shifts[-1] - self.relative_shifts[i])
+            end = start + self.w
+            self.shifted[i, :, start:end, :] = self.images[i]
 
     def view_point_by_mask(self, mask, fast=True):
         _, h, w, c = self.shifted.shape
@@ -187,7 +193,7 @@ class LightFieldRefocus(LightField):
     def __init__(self, dir_path):
         super().__init__(dir_path)
 
-    def refocus_by_shift(self, shift_size, remove_occ):
+    def refocus_by_shift(self, shift_size, remove_occ=False):
         """Shift frames related to center-frame"""
         centered_shifts = np.array(self.relative_shifts) - \
                           self.relative_shifts[(self.num_of_frames - 1) // 2]
@@ -201,7 +207,7 @@ class LightFieldRefocus(LightField):
             return np.median(shifted_images, axis=0) * 255
         return np.mean(shifted_images, axis=0) * 255
 
-    def refocus_by_object(self, up, left, down, right, remove_occ,
+    def refocus_by_object(self, up, left, down, right, remove_occ=False,
                           range_to_scan=4, num_of_intervals=10, debug=False):
         """Maximise edges in selected area"""
         def evaluate_edges(img):
@@ -218,5 +224,7 @@ class LightFieldRefocus(LightField):
         if debug:
             plt.plot(eva_list)
             plt.show()
+
+        self.best_focus = intervals[np.argmax(eva_list)]
 
         return self.refocus_by_shift(intervals[np.argmax(eva_list)], remove_occ)
