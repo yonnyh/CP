@@ -5,7 +5,6 @@ import os
 import numpy as np
 from PIL import Image, ImageTk
 import ex2.light_field as lf
-import matplotlib.pyplot as plt
 
 COL_INDEX = 0
 ANGLE_INDEX = 1
@@ -43,6 +42,7 @@ class ViewPoint:
         self.translate_only = True
         self.lf_object = None
         self.uniform_height = 400
+        self.total_cols = None
 
     def _not_translation_only(self):
         if self.translate_only:
@@ -52,7 +52,7 @@ class ViewPoint:
 
     def _init_lf_object(self):
         self.lf_object = lf.LightFileViewPoint(self.images)
-        self.lf_object.calc_homographies()
+        self.lf_object.calc_homographies() # todo del
         if not self.translate_only:
             self.lf_object.apply_homographies_on_images()
 
@@ -88,12 +88,15 @@ class ViewPoint:
         textbox_vars = [tk.StringVar() for _ in range(4)]
         new_win = tk.Toplevel(self.root)
         tk.Label(new_win, text='Enter initial viewpoint:').grid(row=0, column=0, sticky='w', columnspan=5)
-        # first frame
-        tk.Label(new_win, text='Total frame number: ').grid(row=1, column=0, sticky='w')
+        tk.Label(new_win, text='Total frames number: ').grid(row=1, column=0, sticky='w')
         tk.Label(new_win, width=6, text=str((self.total_frame - 1)), bg='red').grid(row=1, column=1)
+        tk.Label(new_win, text='Total frame columns: ').grid(row=1, column=2, sticky='w')
+        tk.Label(new_win, width=6, text=str((self.total_cols - 1)), bg='red').grid(row=1, column=3)
 
+        # first frame
         tk.Label(new_win, text='Starting frame:').grid(row=2, column=0, sticky='w')
         tk.Entry(new_win, width=6, textvariable=textbox_vars[0], bg='pink').grid(row=2, column=1)
+
         # first col
         tk.Label(new_win, text='Starting column:').grid(row=2, column=2, sticky='w')
         tk.Entry(new_win, width=6, textvariable=textbox_vars[1], bg='pink').grid(row=2, column=3)
@@ -122,6 +125,8 @@ class ViewPoint:
             self.output_label.configure(image=self.output_tk_image)
         except ValueError:
             pass
+        except AttributeError:
+            pass
 
         if index == FRAME_INDEX and len(self.tk_images) != 0:
             self.starting_frame_canvas.create_image((150, 150), image=self.tk_images[int(val)])
@@ -146,6 +151,8 @@ class ViewPoint:
             if index == FRAME_INDEX and len(self.tk_images) != 0:
                 self.starting_frame_canvas.create_image((150, 150), image=self.tk_images[int(val)])
         except ValueError:
+            pass
+        except AttributeError:
             pass
 
     def convert_to_uint8(self, image):
@@ -186,7 +193,7 @@ class ViewPoint:
         first_img = skimage.io.imread(os.path.join(directory, files[0]))/255.0
         self.tk_images.append(ImageTk.PhotoImage(self.resize_image(Image.fromarray(self.convert_to_uint8(
             first_img)), 300, 300)))
-
+        self.total_cols = first_img.shape[1]
         # update the sliders
         self.sliders[FRAME_INDEX].configure(to=self.total_frame - 1)
         self.sliders[COL_INDEX].configure(to=first_img.shape[1] - 1)
@@ -219,18 +226,21 @@ class ViewPoint:
         # todo: box has to create outputs as slider does
 
     def optimize_output(self):
-        start_frame, start_col = int(self.text_box_vars[FRAME_INDEX].get()), int(
-            self.text_box_vars[COL_INDEX].get())
-        angle = float(self.text_box_vars[ANGLE_INDEX].get())
-        # update output
-        output = self.lf_object.calculate_view_point_by_angle(frame=start_frame, col=start_col,
-                                                              angle_deg=angle, fast=False)
-        height, width = output.shape[0], output.shape[1]
-        self.output_label.configure(height=height, width=width)
-        self.output_tk_image = ImageTk.PhotoImage(self.resize_image(Image.fromarray(
-            self.convert_to_uint8(output)), int(self.uniform_height * (width / height)),
-            self.uniform_height))
-        self.output_label.configure(image=self.output_tk_image)
+        try:
+            start_frame, start_col = int(self.text_box_vars[FRAME_INDEX].get()), int(
+                self.text_box_vars[COL_INDEX].get())
+            angle = float(self.text_box_vars[ANGLE_INDEX].get())
+            # update output
+            output = self.lf_object.calculate_view_point_by_angle(frame=start_frame, col=start_col,
+                                                                  angle_deg=angle, fast=False)
+            height, width = output.shape[0], output.shape[1]
+            self.output_label.configure(height=height, width=width)
+            self.output_tk_image = ImageTk.PhotoImage(self.resize_image(Image.fromarray(
+                self.convert_to_uint8(output)), int(self.uniform_height * (width / height)),
+                self.uniform_height))
+            self.output_label.configure(image=self.output_tk_image)
+        except AttributeError:
+            pass
 
     def run(self):
 
@@ -275,6 +285,8 @@ class ViewPoint:
 
         #  starting col text box
         self.init_box(frame=self.sliders_boxes_frame, index=COL_INDEX, row=3, col=1)
+        self.text_box_vars[COL_INDEX].set(0)
+
 
         # angle slider
         self.init_slider(frame=self.sliders_boxes_frame, text='Angle:', label_row=4, label_col=0,
@@ -284,6 +296,7 @@ class ViewPoint:
 
         #  angle text box
         self.init_box(frame=self.sliders_boxes_frame, index=ANGLE_INDEX, row=5, col=1)
+        self.text_box_vars[ANGLE_INDEX].set(1.0)
 
         # starting frame slider
         self.init_slider(frame=self.sliders_boxes_frame, text='Starting frame:', label_row=0, label_col=0,
@@ -293,6 +306,7 @@ class ViewPoint:
 
         #  starting frame text box
         self.init_box(frame=self.sliders_boxes_frame, index=FRAME_INDEX, row=1, col=1)
+        self.text_box_vars[FRAME_INDEX].set(0)
 
         # optimize output
         tk.Button(self.controller_frame, text='Optimize output', command=self.optimize_output).grid(row=1,
@@ -489,7 +503,7 @@ class Focus:
 
 
 if __name__ == '__main__':
-    # view_point = ViewPoint()
-    # view_point.run()
-    focus = Focus()
-    focus.run()
+    view_point = ViewPoint()
+    view_point.run()
+    # focus = Focus()
+    # focus.run()
