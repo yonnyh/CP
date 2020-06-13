@@ -5,6 +5,7 @@ import os
 import numpy as np
 from PIL import Image, ImageTk
 import ex2.light_field as lf
+import ex2.area_marker as am
 
 COL_INDEX = 0
 ANGLE_INDEX = 1
@@ -342,6 +343,10 @@ class Focus:
         self.total_frame = None
         self.lf_object = None
         self.uniform_height = 700
+        self.am_object = None
+        self.left, self.right, self.up, self.down = None, None, None, None
+    def _init_am_object(self):
+        self.am_object = am.AreaMarker(self.images[(len(self.images) - 1)//2])
 
     def _init_lf_object(self):
         self.lf_object = lf.LightFieldRefocus(self.images)
@@ -400,10 +405,15 @@ class Focus:
             width = int(width * height / old_height)
         return image.resize((width, height), Image.ANTIALIAS)
 
-    def show_result(self, shift_size):
+    def show_result(self, shift_size=0.0, mark=False):
         try:
-            # calculate output
-            output = self.lf_object.refocus_by_shift(shift_size=shift_size, remove_occ=self.remove_occlusions)
+            if mark:
+                output = self.lf_object.refocus_by_object(up=self.up, left=self.left, down=self.down,
+                                                          right=self.right,
+                                                          remove_occ=self.remove_occlusions)
+            else:
+                output = self.lf_object.refocus_by_shift(shift_size=shift_size,
+                                                         remove_occ=self.remove_occlusions)
             height, width = output.shape[0], output.shape[1]
             self.output_label.configure(height=height, width=width)
             self.output_tk_image = ImageTk.PhotoImage(self.resize_image(Image.fromarray(
@@ -452,6 +462,14 @@ class Focus:
         col_text_box.grid(row=row, column=col, sticky=sticky)
         self.text_box_vars[index].trace_add('write', lambda *args: self.update_slider())
 
+    def mark_object_and_show(self):
+        try:
+            self._init_am_object()
+            self.left, self.right, self.up, self.down = self.am_object.get_square_from_user()
+            self.show_result(mark=True)
+        except AttributeError:
+            pass
+
     def run(self):
         # input frame
         tk.Label(self.root, text='Get input').grid(row=0, column=0, sticky='ew')
@@ -472,11 +490,16 @@ class Focus:
         self.controller_frame = tk.Frame(self.root, relief='raised', borderwidth=3)
         self.controller_frame.grid(row=3, column=0)
 
+        # mark object to focus
+        tk.Button(self.controller_frame, text='Mark object to focus', command=self.mark_object_and_show,
+                  borderwidth=5).grid(row=3, column=0, sticky='e')
+
         # focus slider
         self.init_slider(frame=self.controller_frame, text='Focus:', label_row=0, label_col=0,
-                         label_sticky='w', scale_from=0, scale_to=10,
+                         label_sticky='w', scale_from=-5, scale_to=5,
                          resolution=0.1, index=FOCUS_SLIDER, color='pink', scale_row=1, scale_col=0,
                          scale_sticky='s')
+        self.sliders[FOCUS_SLIDER].set(0.0)
 
         #  focus text box
         self.init_box(frame=self.controller_frame, index=FOCUS_SLIDER, row=1, col=1)
@@ -503,7 +526,7 @@ class Focus:
 
 
 if __name__ == '__main__':
-    view_point = ViewPoint()
-    view_point.run()
-    # focus = Focus()
-    # focus.run()
+    # view_point = ViewPoint()
+    # view_point.run()
+    focus = Focus()
+    focus.run()

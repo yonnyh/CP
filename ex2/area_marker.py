@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-
+import matplotlib.pyplot as plt
 WINDOW_TITLE = 'Mark focus area (press Enter to complete, or Esc to reset)'
 ENTER_KEY = 13
 ESC_KEY = 27
@@ -99,3 +99,8 @@ class AreaMarker:
 
                     cv2.destroyAllWindows()
                     return start_x, end_x, start_y, end_y
+if __name__ == '__main__':
+    import skimage.io
+    img = skimage.io.imread("C:/Users/whavi/PycharmProjects/CP/ex2/data/Chess-small/a.png")
+    am = AreaMarker(img)
+    am.get_square_from_user()
