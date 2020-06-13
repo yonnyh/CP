@@ -45,7 +45,10 @@ class ViewPoint:
         self.uniform_height = 400
 
     def _not_translation_only(self):
-        self.translate_only = False
+        if self.translate_only:
+            self.translate_only = False
+        else:
+            self.translate_only = True
 
     def _init_lf_object(self):
         self.lf_object = lf.LightFileViewPoint(self.images)
@@ -215,6 +218,20 @@ class ViewPoint:
         self.text_box_vars[index].trace_add('write', lambda *args: self.update_slider(index))
         # todo: box has to create outputs as slider does
 
+    def optimize_output(self):
+        start_frame, start_col = int(self.text_box_vars[FRAME_INDEX].get()), int(
+            self.text_box_vars[COL_INDEX].get())
+        angle = float(self.text_box_vars[ANGLE_INDEX].get())
+        # update output
+        output = self.lf_object.calculate_view_point_by_angle(frame=start_frame, col=start_col,
+                                                              angle_deg=angle, fast=False)
+        height, width = output.shape[0], output.shape[1]
+        self.output_label.configure(height=height, width=width)
+        self.output_tk_image = ImageTk.PhotoImage(self.resize_image(Image.fromarray(
+            self.convert_to_uint8(output)), int(self.uniform_height * (width / height)),
+            self.uniform_height))
+        self.output_label.configure(image=self.output_tk_image)
+
     def run(self):
 
         # input frame
@@ -251,43 +268,42 @@ class ViewPoint:
         self.starting_frame_canvas.create_image((150, 150), image=None)
 
         # starting col slider
-        self.init_slider(frame=self.sliders_boxes_frame, text='Starting column:', label_row=0, label_col=0,
+        self.init_slider(frame=self.sliders_boxes_frame, text='Starting column:', label_row=2, label_col=0,
                          label_sticky='we', scale_from=0, scale_to=10,
-                         resolution=1, index=COL_INDEX, color='pink', scale_row=1, scale_col=0,
+                         resolution=1, index=COL_INDEX, color='pink', scale_row=3, scale_col=0,
                          scale_sticky='w')
 
         #  starting col text box
-        self.init_box(frame=self.sliders_boxes_frame, index=COL_INDEX, row=1, col=1)
+        self.init_box(frame=self.sliders_boxes_frame, index=COL_INDEX, row=3, col=1)
 
         # angle slider
-        self.init_slider(frame=self.sliders_boxes_frame, text='Angle:', label_row=2, label_col=0,
+        self.init_slider(frame=self.sliders_boxes_frame, text='Angle:', label_row=4, label_col=0,
                          label_sticky='we', scale_from=1, scale_to=179,
-                         resolution=0.1, index=ANGLE_INDEX, color='red', scale_row=3, scale_col=0,
+                         resolution=0.1, index=ANGLE_INDEX, color='red', scale_row=5, scale_col=0,
                          scale_sticky='w')
 
         #  angle text box
-        self.init_box(frame=self.sliders_boxes_frame, index=ANGLE_INDEX, row=3, col=1)
+        self.init_box(frame=self.sliders_boxes_frame, index=ANGLE_INDEX, row=5, col=1)
 
         # starting frame slider
-        self.init_slider(frame=self.sliders_boxes_frame, text='Starting frame:', label_row=4, label_col=0,
+        self.init_slider(frame=self.sliders_boxes_frame, text='Starting frame:', label_row=0, label_col=0,
                          label_sticky='we', scale_from=0, scale_to=20,
-                         resolution=1, index=FRAME_INDEX, color='blue', scale_row=5, scale_col=0,
+                         resolution=1, index=FRAME_INDEX, color='blue', scale_row=1, scale_col=0,
                          scale_sticky='w')
 
         #  starting frame text box
-        self.init_box(frame=self.sliders_boxes_frame, index=FRAME_INDEX, row=5, col=1)
+        self.init_box(frame=self.sliders_boxes_frame, index=FRAME_INDEX, row=1, col=1)
+
+        # optimize output
+        tk.Button(self.controller_frame, text='Optimize output', command=self.optimize_output).grid(row=1,
+                                                                                                    column=0, sticky='ew')
 
         # output
         tk.Label(self.root, text='Output result').grid(row=0, column=1, sticky='ewns')
-        # self.output_frame = tk.Frame(self.root, relief='raised', borderwidth=3)
-        # self.output_frame.grid(row=1, column=1, sticky='enws', rowspan=4, columnspan=3)
         self.output_label = tk.Label(self.root)
         self.output_label.grid(row=1, column=1, sticky='enws',
                                image=self.output_tk_image, rowspan=5)
-        # self.output_canvas = tk.Canvas(self.output_frame, height=300, width=300,borderwidth=3 ,
-        #                                relief='raised')
-        # self.output_canvas.grid(row=1, column=0, sticky='n')
-        # self.output_canvas.create_image((150, 150), image=None)
+
 
         self.root.mainloop()
 
@@ -302,63 +318,51 @@ class Focus:
         self.text_box_vars = [tk.StringVar() for _ in range(2)]
         self.sliders = []
         self.images = []
-        self.tk_images = []
+        self.remove_occlusions = False
         self.input_frame = None
         self.output_frame = None
-        self.starting_frame_canvas = None
-        self.controller_frame = None
-        self.sliders_boxes_frame = None
         self.img_frame = None
-        self.starting_frame = None
-        self.starting_col = None
-        self.ending_frame = None
         self.ending_col = None
+        self.output_label = None
+        self.output_tk_image = None
         self.total_frame = None
-        self.output_canvas = None
+        self.lf_object = None
+        self.uniform_height = 700
 
-    def choose_frames_loading(self):
-        def save_and_close():
-            self.starting_frame, self.starting_col = int(textbox_vars[0].get()), int(textbox_vars[1].get())
-            self.ending_frame, self.ending_col = int(textbox_vars[2].get()), int(textbox_vars[3].get())
-            new_win.destroy()
-            self.update_text_box(self.starting_frame, FRAME_INDEX)
-            self.update_text_box(self.starting_col, COL_INDEX)
-            self.update_slider(FRAME_INDEX)
-            self.update_slider(COL_INDEX)
-            # self.output_canvas.create_image((150, 150), image=self.tk_images[0])
-            # TODO calculate the output to show and update the angle
+    def _init_lf_object(self):
+        self.lf_object = lf.LightFieldRefocus(self.images)
 
-        textbox_vars = [tk.StringVar() for _ in range(4)]
-        new_win = tk.Toplevel(self.root)
-        tk.Label(new_win, text='Enter initial viewpoint:').grid(row=0, column=0, sticky='w', columnspan=5)
-        # first frame
-        tk.Label(new_win, text='Total frame number: ').grid(row=1, column=0, sticky='w')
-        tk.Label(new_win, width=6, text=str(self.total_frame), bg='red').grid(row=1, column=1)
-
-        tk.Label(new_win, text='Starting frame:').grid(row=2, column=0, sticky='w')
-        tk.Entry(new_win, width=6, textvariable=textbox_vars[0], bg='pink').grid(row=2, column=1)
-        # first col
-        tk.Label(new_win, text='Starting column:').grid(row=2, column=2, sticky='w')
-        tk.Entry(new_win, width=6, textvariable=textbox_vars[1], bg='pink').grid(row=2, column=3)
-
-        # last Frame
-        tk.Label(new_win, text='Ending frame:').grid(row=4, column=0, sticky='w')
-        tk.Entry(new_win, width=6, textvariable=textbox_vars[2], bg='cyan').grid(row=4, column=1)
-
-        # last col
-        tk.Label(new_win, text='Ending column:').grid(row=4, column=2, sticky='w')
-        tk.Entry(new_win, width=6, textvariable=textbox_vars[3], bg='cyan').grid(row=4, column=3)
-        tk.Button(new_win, text='Run', command=save_and_close).grid(row=5, column=0, columnspan=3)
+    def update_remove_occlusions(self):
+        if not self.remove_occlusions:
+            self.remove_occlusions = True
+            try:
+                val = float(self.text_box_vars[FOCUS_SLIDER].get())
+                self.show_result(val)
+            except ValueError:
+                pass
+        else:
+            self.remove_occlusions = False
+            try:
+                val = float(self.text_box_vars[FOCUS_SLIDER].get())
+                self.show_result(val)
+            except ValueError:
+                pass
 
     def update_text_box(self, val, index):
-        self.text_box_vars[index].set(val)
+        try:
+            self.text_box_vars[index].set(val)
+            self.show_result(val)
+        except ValueError:
+            pass
 
     def update_slider(self):
         try:
             val = float(self.text_box_vars[FOCUS_SLIDER].get())
+            self.show_result(val)
             self.sliders[FOCUS_SLIDER].set(val)
         except ValueError:
             pass
+
     def update_resolution_slider(self):
         try:
             self.sliders[FOCUS_SLIDER].configure(resolution=float(self.text_box_vars[FOCUS_RESOLUTION].get()))
@@ -380,9 +384,19 @@ class Focus:
             old_height = height
             height = max_height
             width = int(width * height / old_height)
-        image = image.resize((width, height), Image.ANTIALIAS)
+        return image.resize((width, height), Image.ANTIALIAS)
 
-        return ImageTk.PhotoImage(image)
+    def show_result(self, shift_size):
+        try:
+            # calculate output
+            output = self.lf_object.refocus_by_shift(shift_size=shift_size, remove_occ=self.remove_occlusions)
+            height, width = output.shape[0], output.shape[1]
+            self.output_label.configure(height=height, width=width)
+            self.output_tk_image = ImageTk.PhotoImage(self.resize_image(Image.fromarray(
+                self.convert_to_uint8(output)), self.uniform_height, self.uniform_height * (width / height)))
+            self.output_label.configure(image=self.output_tk_image)
+        except AttributeError:
+            pass
 
     def load_images(self, path=None):
         if path is None:
@@ -390,21 +404,23 @@ class Focus:
         else:
             directory = path
 
-        if directory != '':
-            del self.tk_images[:]
-            files = sorted(os.listdir(directory))
-            self.total_frame = len(files)
-            first_img = skimage.io.imread(os.path.join(directory, files[0])) / 255.0
-            self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(first_img))))
-            # update the sliders
-            # self.sliders[FOCUS_SLIDER].configure(to=10)
-            images = np.zeros(np.insert(first_img.shape, 0, self.total_frame))
-            images[0] = first_img
-            # read all images
-            for i in range(1, self.total_frame):
-                images[i] = skimage.io.imread(os.path.join(directory, files[i])) / 255.0
-                self.tk_images.append(self.resize_image(Image.fromarray(self.convert_to_uint8(images[i]))))
-            # self.choose_frames_loading()
+        if directory == '':
+            raise IOError("Problem in loading images from this directory")
+
+        files = sorted(os.listdir(directory))
+        self.total_frame = len(files)
+        first_img = skimage.io.imread(os.path.join(directory, files[0])) / 255.0
+        # update the sliders
+        self.images = np.zeros(np.insert(first_img.shape, 0, self.total_frame))
+        self.images[0] = first_img
+
+        # read all images
+        for i in range(1, self.total_frame):
+            self.images[i] = skimage.io.imread(os.path.join(directory, files[i])) / 255.0
+
+        # Initialize LightField object
+        self._init_lf_object()
+        self.show_result(float(self.text_box_vars[FOCUS_SLIDER].get()))
 
     def init_slider(self, frame, text, label_row, label_col, label_sticky, scale_from, scale_to,
                     resolution, index, color, scale_row, scale_col, scale_sticky):
@@ -423,14 +439,13 @@ class Focus:
         self.text_box_vars[index].trace_add('write', lambda *args: self.update_slider())
 
     def run(self):
-
         # input frame
         tk.Label(self.root, text='Get input').grid(row=0, column=0, sticky='ew')
         self.input_frame = tk.Frame(self.root, relief='raised', borderwidth=3)
-        tk.Checkbutton(self.input_frame, text='Remove occlusions', command=None).pack(side='right',
+        tk.Checkbutton(self.input_frame, text='Remove occlusions', command=self.update_remove_occlusions).pack(side='bottom',
                                                                                          padx=10, pady=10)
-        tk.Button(self.input_frame, text='Load images', command=self.load_images).pack(side='right', padx=60,
-                                                                                       pady=25)
+        tk.Button(self.input_frame, text='Load images', command=self.load_images).pack(side='right', padx=5,
+                                                                                       pady=5)
         # path input
         path_entry = tk.Entry(self.input_frame, bd=5, width=50)
         path_entry.pack(side='left')
@@ -445,37 +460,36 @@ class Focus:
 
         # focus slider
         self.init_slider(frame=self.controller_frame, text='Focus:', label_row=0, label_col=0,
-                         label_sticky='w', scale_from=0, scale_to=100,
+                         label_sticky='w', scale_from=0, scale_to=10,
                          resolution=0.1, index=FOCUS_SLIDER, color='pink', scale_row=1, scale_col=0,
                          scale_sticky='s')
 
         #  focus text box
         self.init_box(frame=self.controller_frame, index=FOCUS_SLIDER, row=1, col=1)
+        self.text_box_vars[FOCUS_SLIDER].set(0.0)
 
         self.resolution_frame = tk.Frame(self.controller_frame)
         self.resolution_frame.grid(row=1, column=2)
+
         # resolution box
         tk.Label(self.resolution_frame, text='Slider resolution').grid(row=0, column=0)
+        self.text_box_vars[FOCUS_RESOLUTION].set(0.1)
 
         resolution_text_box = tk.Entry(self.resolution_frame, width=10, bd=3, textvariable=self.text_box_vars[FOCUS_RESOLUTION])
         resolution_text_box.grid(row=1, column=0, sticky='s')
         self.text_box_vars[FOCUS_RESOLUTION].trace_add('write', lambda *args: self.update_resolution_slider())
 
-
         # output
         tk.Label(self.root, text='Output result').grid(row=0, column=1, sticky='ewns')
-        self.output_frame = tk.Frame(self.root, relief='raised', borderwidth=3)
-        self.output_frame.grid(row=1, column=1, sticky='ewns', rowspan=8, columnspan=3)
-        self.output_canvas = tk.Canvas(self.output_frame, height=300, width=300, borderwidth=3,
-                                       relief='raised')
-        self.output_canvas.grid(row=1, column=0, sticky='n')
-        self.output_canvas.create_image((150, 150), image=None)
+        self.output_label = tk.Label(self.root)
+        self.output_label.grid(row=1, column=1, sticky='enws',
+                               image=self.output_tk_image, rowspan=5)
 
         self.root.mainloop()
 
 
 if __name__ == '__main__':
-    view_point = ViewPoint()
-    view_point.run()
-    # focus = Focus()
-    # focus.run()
+    # view_point = ViewPoint()
+    # view_point.run()
+    focus = Focus()
+    focus.run()
