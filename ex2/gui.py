@@ -53,7 +53,6 @@ class ViewPoint:
 
     def _init_lf_object(self):
         self.lf_object = lf.LightFileViewPoint(self.images)
-        self.lf_object.calc_homographies() # todo del
         if not self.translate_only:
             self.lf_object.apply_homographies_on_images()
 
@@ -467,6 +466,9 @@ class Focus:
             self._init_am_object()
             self.left, self.right, self.up, self.down = self.am_object.get_square_from_user()
             self.show_result(mark=True)
+            val = self.lf_object.best_focus
+            self.update_text_box(val, FOCUS_SLIDER)
+            self.update_slider()
         except AttributeError:
             pass
 
