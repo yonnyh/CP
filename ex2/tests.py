@@ -10,6 +10,7 @@ SNOW = "data/train-in-snow/"
 JELLY = "data/pp/"
 LEGO = "data/blue-lego-small/"
 APPLES = "data/apples/"
+OUR = "data/our_images/"
 
 
 def det_images_from_path(dir_path):
@@ -94,6 +95,7 @@ def test_calculate_view_point_by_angle(scene=BANANA):
 
 def save_veiwpoint(scene, name):
     lf = LightFileViewPoint(det_images_from_path(scene))
+    lf.apply_homographies_on_images()
     start_f = 0
     end_f = lf.num_of_frames - 1
     trick_s, trick_e = 4, 8
@@ -112,7 +114,8 @@ def save_veiwpoint(scene, name):
                       f"end frame: {ef}, end col: {text_e}")
             plt.imshow(out)
             sig = "fast" if fast else "full"
-            plt.savefig(f"outputs_viewpoint/{name}/{name}_{sig}_{sf, sc, ef, ec}.png")
+            plt.savefig(f"outputs_viewpoint/{name}/{name}_{sig}_"
+                        f"{sf, text_s, ef, text_e}.png")
             # plt.show()
 
 
@@ -167,10 +170,10 @@ if __name__ == '__main__':
     # test_calculate_view_point_by_frames(scene=SNOW, apply_hs=False,
     #                                     debug=True, fast=True, by_angle=False)
     # test_calculate_view_point_by_angle()
-    save_veiwpoint(SNOW, "snow")
+    # save_veiwpoint(APPLES, "apples_h")
     # test_shift()
     # test_refocus_by_shift(remove_occ=True)
     # test_refocus_by_shift(remove_occ=False)
-    # save_refocus(scene=LEGO, name="lego")
+    save_refocus(scene=OUR, name="our")
     # test_refocus_by_object(remove_occ=False, debug=True)
 
