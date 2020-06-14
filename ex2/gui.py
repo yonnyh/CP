@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image, ImageTk
 import ex2.light_field as lf
 import ex2.area_marker as am
+import sys
 
 COL_INDEX = 0
 ANGLE_INDEX = 1
@@ -540,7 +541,12 @@ class Focus:
 
 
 if __name__ == '__main__':
-    # view_point = ViewPoint()
-    # view_point.run()
-    focus = Focus()
-    focus.run()
+    input = sys.argv[1:]
+    if input[0] == "vp":
+        view_point = ViewPoint()
+        view_point.run()
+    elif input[0] == 'rf':
+        focus = Focus()
+        focus.run()
+    else:
+        print("Input should be 'vp' for view-point and 'rf' for re-focus")
