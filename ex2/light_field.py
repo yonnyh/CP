@@ -25,9 +25,10 @@ class LightField:
         self.default_shift = 1  # in case user doesn't calc homographies
         self.relative_shifts = [self.default_shift *
                                 i for i in range(self.num_of_frames)]
+        self.left_to_right = True
         self.Hs = None
 
-    def calc_homographies(self):
+    def calc_homographies(self, const_move=False):
         points_and_descriptors = []
         for i, im in enumerate(self.images):
             gray_im = np.dot(im[..., :3], [0.2989, 0.5870, 0.1140])
@@ -54,6 +55,16 @@ class LightField:
         self.relative_shifts = [int(w) - int(self.Hs[0, 0, -1]) for w in
                                 self.Hs[:, 0, -1]]
 
+        if self.relative_shifts[-1] < 0:  # frames taken from right to left
+            self.left_to_right = False
+            for i in range(len(self.relative_shifts)):
+                self.relative_shifts[i] -= self.relative_shifts[-1]
+
+        if const_move:
+            start, end = self.relative_shifts[0], self.relative_shifts[-1]
+            self.relative_shifts = np.linspace(start, end, len(
+                self.relative_shifts)).astype(np.int)
+
     def apply_homographies_on_images(self):
         """
         Load images such that they all rotated and y-axis-aligned related to
@@ -78,25 +89,31 @@ class LightFileViewPoint(LightField):
         if self.Hs is None:
             self.calc_homographies()
 
-        canvas_w = self.w + abs(self.relative_shifts[-1])
+        canvas_w = self.w + max(self.relative_shifts)
         self.shifted = np.zeros((self.num_of_frames, self.h, canvas_w, 3))
         for i in range(self.num_of_frames):
-            x_shift = int(self.relative_shifts[i])
-            if x_shift > 0:
-                start = x_shift
-            else:
-                start = abs(self.relative_shifts[-1] - self.relative_shifts[i])
+            start = int(self.relative_shifts[i])
             end = start + self.w
             self.shifted[i, :, start:end, :] = self.images[i]
 
-    def view_point_by_mask(self, mask, fast=True):
+    def _display_debug(self, mask):
+        d_mask = np.copy(mask)
+        for i in range(self.shifted.shape[0]):  # range of frames
+            d_mask[i, np.where(self.shifted[i, 0, :, :] == 0)[0]] = 0.2
+            d_mask[i, np.where(mask[i, :] > 0)[0]] = mask[
+                i, np.where(mask[i, :] > 0)[0]]
+        plt.imshow(d_mask)
+        plt.show()
+
+    def view_point_by_mask(self, mask, fast=True, opp_order=False):
         _, h, w, c = self.shifted.shape
         if fast:
             slices = []
             for i in range(self.num_of_frames):
-                slices.append(np.transpose(self.shifted[i, :, mask[i] == 1, :],
-                                           (1, 0, 2)))
-            return np.hstack(slices)
+                slices.append(self.shifted[i, :, mask[i] == 1, :])
+            if opp_order:
+                slices.reverse()
+            return np.transpose(np.vstack(slices), (1, 0, 2))
 
         else:
             canvas = np.zeros((h, w, c))
@@ -121,7 +138,8 @@ class LightFileViewPoint(LightField):
 
         if by_angle:
             angle = self.frames_to_angle(frame1, col1, frame2, col2)
-            return self.calculate_view_point_by_angle(frame1, col1, angle)
+            return self.calculate_view_point_by_angle(frame1, col1, angle,
+                                                      debug=debug, fast=fast)
 
         else:
             frames, h, w, c = self.shifted.shape
@@ -137,10 +155,11 @@ class LightFileViewPoint(LightField):
                 mask[rr, cc] = 1
 
             if debug:
-                plt.imshow(mask)
-                plt.show()
+                self._display_debug(mask)
 
-            return self.view_point_by_mask(mask, fast=fast)
+            opp_order = (cc[0] > cc[-1])
+
+            return self.view_point_by_mask(mask, fast=fast, opp_order=opp_order)
 
     def frames_to_angle(self, frame1, col1, frame2, col2):
         """Return angle in range [0, 180]"""
@@ -183,10 +202,11 @@ class LightFileViewPoint(LightField):
             mask[rr_valid, cc_valid] = 1
 
         if debug:
-            plt.imshow(mask)
-            plt.show()
+            self._display_debug(mask)
 
-        return self.view_point_by_mask(mask, fast=fast)
+        opp_order = (angle_deg < 90)
+
+        return self.view_point_by_mask(mask, fast=fast, opp_order=opp_order)
 
 
 class LightFieldRefocus(LightField):
@@ -208,13 +228,13 @@ class LightFieldRefocus(LightField):
         return np.mean(shifted_images, axis=0) * 255
 
     def refocus_by_object(self, up, left, down, right, remove_occ=False,
-                          range_to_scan=4, num_of_intervals=10, debug=False):
+                          range_to_scan=4, num_of_intervals=17, debug=False):
         """Maximise edges in selected area"""
         def evaluate_edges(img):
             edges_img = sobel(img[up:down, left:right])
             return np.sum(edges_img)
 
-        intervals = np.linspace(0, range_to_scan, num_of_intervals)
+        intervals = np.linspace(-range_to_scan, range_to_scan, num_of_intervals)
         eva_list = np.zeros_like(intervals)
         for i in range(num_of_intervals):
             refocused = self.refocus_by_shift(intervals[i], remove_occ)
