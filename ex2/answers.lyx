@@ -309,7 +309,7 @@ slices
 הערה: יצרנו שני ערוצי חישוב, אחד מהיר לשם נוחות המשתמש, ואחד איטי ומדויק
  יותר.
  ההבדל המרכזי הוא שהקו שמיוצר בערוץ המהיר הוא קו בינארי, ואילו בערוץ המדויק
- הוא קו שיכול לקבל טווח של ערכים בטווח 
+ הוא קו שיכול לקבל ערכים בטווח 
 \begin_inset Formula $\left[0,1\right]$
 \end_inset
 
@@ -401,9 +401,669 @@ refocus
 \end_layout
 
 \begin_layout Enumerate
-???
+המשתמש מכניס קלט שהוא גודל ההזזה.
+ אנחנו מיצרים קנווס ריק, ולתוכו מכניסים את כל התמונות כאשר הן מוזזות בציר
+ 
+\begin_inset Formula $x$
+\end_inset
+
+ על פי הגודל שהכניס המשתמש.
+ אופן ההזזה הוא כזה: התמונה המרכזית לא זזה כלל, התמונה שלימינה זזה בגודל
+ שהכניס המשתמש, זו שלימינה זזה פי שנים מהגודל שהכניס המשתמש וכן הלאה.
+ התמונות שמשמאל עושות אותו הדבר, רק לכוון ההפוך.
+ בסופו של התהליך מבצעים ממוצע או חציון עבור כל עמודה )כתלות בבחירת המשתמש(
 \end_layout
 
+\begin_layout Enumerate
+אופציה אחרת היא קבלת
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+bounding box
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+מהמשתמש, וצריך לדאוג שהשטח בתוכן יהיה מפוקס.
+ שיטת העבודה היא כזו:
+\end_layout
+
+\begin_deeper
+\begin_layout Enumerate
+רצים על גדלים שונים של הזזה, ועבור כל אחד מהם מבצעים את התהליך שתואר בסעיף
+ הקודם.
+\end_layout
+
+\begin_layout Enumerate
+מתוך כל תמונת פלט לוקחים רק את האזור שאותו סימן המשתמש, ומבצעים עליו את
+ האלגוריתם של סובל למציאת גבולות )
+\lang english
+edges
+\lang hebrew
+(.
+ ההנחה היא שהגבולות יהיו החזקים ביותר כאשר התמונה בפוקוס.
+\end_layout
+
+\begin_layout Enumerate
+סוכמים את הערכים בתוך האזור המסומן, ושומרים את התוצאה.
+\end_layout
+
+\begin_layout Enumerate
+אחרי שעברנו על כל הגדלים השונים, חוזרים לגודל שנתן את התוצאה הגבוהה ביותר,
+ וזה הפוקוס שמבצעים.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+הוראות שימוש ב-
+\family roman
+\series bold
+\shape up
+\size large
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+GUI
+\end_layout
+
+\begin_layout Standard
+עבור
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+view-point
+\lang hebrew
+:
+\end_layout
+
+\begin_layout Itemize
+טעינת תמונות: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+דרוש שתהיה תקיה במחשב שמכילה תמונות בלבד, כולן באותם המימדים, ועם שמות שיש
+ בהם יחס-סדר.
+\end_layout
+
+\begin_layout Itemize
+כבר בשלב זה על המשתמש להחליט האם הוא רוצה שהתוכנה תבצע תיקונים )סיבובים
+ והזזות( לתמונות שייטענו: אם יבחר שכן, עליו לסמן את הריבוע
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+make transfer motion
+\lang hebrew
+.
+ אם יתחרט לאחר מכן, יהיה עליו לטעון את התמונות מחדש.
+\end_layout
+
+\begin_layout Itemize
+בחירת תקיה:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ניתן לטעון את התקיה ע"י לחיצה על
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+Load images
+\lang hebrew
+ שפותח דפדפן תקיות, ואז לבחור את התקיה הרצויה.
+\end_layout
+
+\begin_layout Itemize
+לחלופין, ניתן לכתוב את ה-
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+path
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+של התקיה, וללחוץ על
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+Load
+\lang hebrew
+.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+לאחר שנבחרה תקיה, התוכנה טוענת את התמונות במצבן הגולמי )ללא עיבוד נוסף(.
+\end_layout
+
+\begin_layout Itemize
+לאחר הטעינה, על המשתמש להחליט מהם הפריימים והעמודות שהוא רואה לראות בתמונת
+ הפלט.
+ ייפתח באופן אוטומטי חלון שמאפשר זאת.
+ לחיצה על
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+run
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+תחשב את ההומוגרפיות עבור כל התמונות.
+ פעולה זו עשויה להמשך מספר שניות, והיא מתרחשת פעם אחת בלבד.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+הפלט:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+מרגע שנטענו תמונות, תמיד יופיע הפלט האחרון שחושב בצידו הימני של המסך.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+שינוי דינאמי של הפלט:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+בכל רגע נתון המשתמש יכול לבחור את פריים ההתחלה, עמודת ההתחלה ואת הזוית יקבעו
+ את נקודת המבט.
+ כל שינוי של כל אחד מהשלושה ייצר באופן מיידי פלט בצידו הימני של המסך.
+\end_layout
+
+\begin_layout Itemize
+את כל אחד מהשלושה ניתן לשנות ע"י הזזה של הסליידר, או כתיבה של מספר באופן
+ ידני ברובריקה המתאימה שלידו.
+\end_layout
+
+\begin_layout Itemize
+פיצ'ר מיוחד: בצידו השמאלי של המסך, בתמונה מוקטנת, ניתן לראות את הפריים הנוכחי
+ שממנו מחושבת נקודת המבט.
+ התמונה הזו משתנה גם היא באופן דינאמי עם כל בחירה חדשה של פריים שמבצע המשתמש.
+\end_layout
+
+\begin_layout Itemize
+שיפור איכות: האלגוריתם שמחשב נקודת מבט פועל באופן מהיר מאוד כדי לאפשר חוויות
+ משתמש רציפה, אך תחת מגבלות דיוק.
+ מרגע שהמשתמש מצא את נקודת המבט הרצויה לו, הוא יכול ללחוץ על
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+Optimize output
+\lang hebrew
+ ולקבל תמונה משופרת שתחושב באופן מקומי.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+עבור
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+refocus
+\lang hebrew
+:
+\end_layout
+
+\begin_layout Itemize
+טעינת התמונות מתבצעת באופן זהה לזו של
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+view-point
+\lang hebrew
+, להוציא העובדה שכאן המשתמש לא בוחר האם להפעיל את ההומוגרפיות על הקלט.
+\end_layout
+
+\begin_layout Itemize
+הפלט גם הוא מתנהל באופן דינאמי ודומה לזה של 
+\lang english
+view-point
+\lang hebrew
+.
+\end_layout
+
+\begin_layout Itemize
+שינוי דינאמי של הפלט:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+שינוי ע"י הזזה:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+המשתמש יכול לבחור את ההזזה של התמונות באופן דינאמי, הן ע"י סליידר והן ע"י
+ כתיבה בתוך הרובריקה שלצידו.
+\end_layout
+
+\begin_layout Itemize
+המשתמש יכול לבחור את רזולוציית ההזזה.
+ הרזולוציה מאותחלת באופן דיפולטיבי ל-
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\numeric on
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+0.1
+\numeric off
+, אך כאמור נתונה לשינוי.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+שינוי ע"י בחירת אובייקט:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+המשתמש יכול ללחוץ על
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+mark object to focus
+\lang hebrew
+ לצורך בחירת אובייקט שברצונו לפקס.
+\end_layout
+
+\begin_layout Itemize
+עם הלחיצה יפתח חלון ובו התמונה הטעונה, ועליו יוכל המשתמש לסמן ריבוע 
+\lang english
+bounding box
+\lang hebrew
+, ע"י שתי לחיצות.
+\end_layout
+
+\begin_layout Itemize
+הקשה על
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+enter
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+תפעיל את התוכנה, ותפקס את הפלט.
+ התהליך עשוי לקחת מספר שניות.
+\end_layout
+
+\end_deeper
+\end_deeper
 \begin_layout Subsection
 קוד
 \end_layout
@@ -780,41 +1440,17 @@ impro_4.py, sol4_utils.py
 ???
 \end_layout
 
-\begin_layout Subsection
-הוראות שימוש ב-
-\family roman
-\series bold
-\shape up
-\size large
-\emph off
-\bar no
-\strikeout off
-\uuline off
-\uwave off
-\noun off
-\color none
- 
-\family default
-\series default
-\shape default
-\size default
-\emph default
-\bar default
-\strikeout default
-\uuline default
-\uwave default
-\noun default
-\color inherit
-\lang english
-GUI
-\end_layout
-
 \begin_layout Section
 דוגמאות
 \end_layout
 
 \begin_layout Subsection
-פוקוס )להוסיף הסברים(
+פוקוס
+\end_layout
+
+\begin_layout Standard
+בכל הסטים שלהלן ניתן לראות תמונה שבה החלק הקרוב בפוקוס, החלק האמצעי בפוקוס,
+ והחלק המרוחק בפוקוס:
 \end_layout
 
 \begin_layout Standard
@@ -992,7 +1628,7 @@ viewpoint
  ניתן לראות שבתחילת הדרך )בשורות העליונות( הקו עובר בתוך הפריימים, אך בהמשך
  הוא יוצא מהם.
  הסיבה לכך היא שההזזות יוצרות מנח שאיננו קמור.
- ממילא, התמונה שמתקבלת תכיל עמודות ריקות רבות, כ:
+ ממילא, התמונה שמתקבלת תכיל עמודות ריקות רבות:
 \end_layout
 
 \begin_layout Standard
@@ -1115,7 +1751,41 @@ GUI
 \end_layout
 
 \begin_layout Standard
-.
+\begin_inset Graphics
+	filename outputs_viewpoint/apples/apples_full_(0, 0, 213, 0).png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename outputs_viewpoint/apples/apples_full_(0, 0, 213, 383).png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename outputs_viewpoint/apples/apples_full_(0, 383, 213, 0).png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename outputs_viewpoint/apples/apples_full_(0, 383, 213, 383).png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+
 \end_layout
 
 \end_body
