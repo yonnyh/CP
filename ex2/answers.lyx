@@ -1,0 +1,1122 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass heb-article
+\use_default_options true
+\maintain_unincluded_children false
+\language hebrew
+\language_package babel
+\inputencoding cp1255
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2cm
+\topmargin 2cm
+\rightmargin 2cm
+\bottommargin 3cm
+\headheight 2cm
+\headsep 2cm
+\footskip 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language swedish
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+צילום חישובי, תרגיל
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\numeric on
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+2
+\end_layout
+
+\begin_layout Author
+יהונתן המר )
+\numeric on
+203536651
+\numeric off
+(, אביחי חיימי )
+\numeric on
+305761637
+\numeric off
+(
+\end_layout
+
+\begin_layout Section
+דו"ח
+\end_layout
+
+\begin_layout Subsection
+קלט
+\end_layout
+
+\begin_layout Subsubsection
+הנחות
+\end_layout
+
+\begin_layout Itemize
+אנחנו מניחים שהתנועה של הצילום היתה בכוון כללי אחד בלבד )הצלם לא הלך שמאלה
+ ואז חזר ימינה, למשל(.
+\end_layout
+
+\begin_layout Itemize
+מלבד זאת, אין לנו הנחות על הקלט.
+ כלומר, הקוד שלנו מחזיר תוצאה טובה עבור כל המצבים הבאים:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+הצילום יכול להיות מימין לשמאל או להיפך.
+\end_layout
+
+\begin_layout Itemize
+הצילום יכול להלקח במרווחים לא קבועים.
+\end_layout
+
+\begin_layout Itemize
+הצילום לא חייב להיות יציב:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+ייתכנו קפיצות )
+\lang english
+tarnstations
+\lang hebrew
+( למעלה
+\backslash
+למטה בציר
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+y
+\lang hebrew
+.
+\end_layout
+
+\begin_layout Itemize
+ייתכנו סיבובים )
+\lang english
+rotatinos
+\lang hebrew
+( של המצלמה במישור התנועה.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Subsubsection
+עיבוד מקדים )
+\lang english
+pre-processing
+\lang hebrew
+(
+\end_layout
+
+\begin_layout Itemize
+אנחנו מחשבים הומוגרפיות עבור כל התמונות.
+\end_layout
+
+\begin_layout Itemize
+המשתמש יכול להחליט האם להפעיל את ההומוגרפיות או לא.
+ הפעלה של ההומוגרפיות תתקן את הסיבוב של התמונות ואת ההזזה שלהם בציר
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+y
+\lang hebrew
+ )על פי הפריים המרכזי(
+\end_layout
+
+\begin_layout Subsection
+תהליך החישוב
+\end_layout
+
+\begin_layout Standard
+עבור
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+view-point
+\lang hebrew
+:
+\end_layout
+
+\begin_layout Enumerate
+מידע מהמשתמש מספק לנו פריים התחלה ופריים סיום, וכן עמודת התחלה ועמודת סיום.
+ לחלופין )כפי שיפורט בהסבר השימוש בממשק המשתמש( מתקבל מהמשתמש פריים, עמודה
+ וזוית צפיה.
+\end_layout
+
+\begin_layout Enumerate
+בעזרת הנתונים הללו מחושבת מסכה ועליה מצוייר קו.
+ המסכה מייצגת את הקנווס שעליו יתקבל הפלט הסופי, והקו - את נקודת המבט הרצויה,
+ המחושבת מהנקודות שמספק המשתמש.
+ כל פיקסל במסכה מייצג עמודה בודדת מתוך סט הפריימים: השורה שלו היא אינקדס
+ הפריים, והעמודה - אינקדס העמודה מתוך הפריים.
+\end_layout
+
+\begin_layout Enumerate
+בעזרת המסכה אנו מוצאים את הפרוסות )
+\lang english
+slices
+\lang hebrew
+( שמהן נרכיב את התמונה הסופית: כל העמודות שדרכן עובר הקו ייבחרו להרכיב את
+ התמונה הסופית.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+הערה: יצרנו שני ערוצי חישוב, אחד מהיר לשם נוחות המשתמש, ואחד איטי ומדויק
+ יותר.
+ ההבדל המרכזי הוא שהקו שמיוצר בערוץ המהיר הוא קו בינארי, ואילו בערוץ המדויק
+ הוא קו שיכול לקבל טווח של ערכים בטווח 
+\begin_inset Formula $\left[0,1\right]$
+\end_inset
+
+.
+ בערוץ המדויק אנחנו מבצעים
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+blending
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+בין עמודות שונות, ולכן התוצאה חלקה יותר אך בד בבד מצריכה זמן חישוב ארוך
+ יותר.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+עבור
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+refocus
+\lang hebrew
+:
+\end_layout
+
+\begin_layout Enumerate
+???
+\end_layout
+
+\begin_layout Subsection
+קוד
+\end_layout
+
+\begin_layout Standard
+מצורף.
+ מכיל את הקבצים הבאים:
+\end_layout
+
+\begin_layout Itemize
+קובץ
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+light_field.py
+\lang hebrew
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+בו מבצעים החישובים המרכזיים של האלגוריתם.
+ 
+\end_layout
+
+\begin_layout Itemize
+מכיל שתי מחלקות, אחת ל-
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LightFileViewPoint
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+ואחת ל-
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LightFieldRefocus
+\lang hebrew
+, שתיהן יורשות ממחלקת-אב משותפת שמבצעת את העיבוד המקדים המשותף לשתיהן
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+LightField
+\lang hebrew
+.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+הקבצים
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+gui.py, area_marker.py
+\lang hebrew
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+מכילים את ממשק המשתמש הגרפי.
+\end_layout
+
+\begin_layout Itemize
+הממשק מפוצל לשני קבצים מטעמי נוחות כתיבת הקוד, כאשר 
+\lang english
+gui.py
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+אחראי על הממשק הכללי עבור
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+שתי התוכנות )
+\lang english
+light-field, refocus
+\lang hebrew
+( ו- 
+\lang english
+area_marker.py
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+מכיל את התוסף שמסייע למשתמש למקד את הפוקוס על אובייקט ספציפי.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+הקבצים
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+impro_4.py, sol4_utils.py
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+מכילים את הקוד שמוצא ומבצע את ההומוגרפיות
+\end_layout
+
+\begin_layout Itemize
+נלקחו בשלמותם מתרגיל
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\numeric on
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+4
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\numeric off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ של הקורס בעיבוד ספרתי של תמונות
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+הדאטה שיצרנו
+\end_layout
+
+\begin_layout Standard
+???
+\end_layout
+
+\begin_layout Subsection
+הוראות שימוש ב-
+\family roman
+\series bold
+\shape up
+\size large
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+GUI
+\end_layout
+
+\begin_layout Section
+דוגמאות
+\end_layout
+
+\begin_layout Subsection
+פוקוס )להוסיף הסברים(
+\end_layout
+
+\begin_layout Standard
+סט ראשון:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename outputs_refocus/chess_small_0.png
+	lyxscale 30
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename outputs_refocus/chess_small_1.png
+	lyxscale 30
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename outputs_refocus/chess_small_2.5.png
+	lyxscale 30
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+סט שני:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename outputs_refocus/jelly_0.png
+	lyxscale 30
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename outputs_refocus/jelly_-2.0.png
+	lyxscale 30
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename outputs_refocus/jelly_-4.0.png
+	lyxscale 30
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+סט שלישי:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename outputs_refocus/lego_0.0.png
+	lyxscale 30
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename outputs_refocus/lego_0.33.png
+	lyxscale 30
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename outputs_refocus/lego_0.66.png
+	lyxscale 30
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+נקודת מבט
+\end_layout
+
+\begin_layout Standard
+להלן מספר סצינות, כאשר כל אחת נלקחת מארבע נקודות מבט:
+\end_layout
+
+\begin_layout Itemize
+מהעמודה הראשונה של הפריים הראשון עד העמודה האחרונה של הפריים האחרון 
+\end_layout
+
+\begin_layout Itemize
+מהעמודה הראשונה של הפריים הראשון עד העמודה הראשונה של הפריים האחרון 
+\end_layout
+
+\begin_layout Itemize
+מהעמודה הראשונה של הפריים הראשון עד העמודה הראשונה של הפריים האחרון 
+\end_layout
+
+\begin_layout Itemize
+מהעמודה האחרונה של הפריים הראשון עד העמודה האחרונה של הפריים האחרון 
+\end_layout
+
+\begin_layout Standard
+לפני שנציג את התוצרים, ברצוננו להסב את תשומת הלב לתופעה שמתרחשת כאשר ההזזות
+ בין הפריימים אינן קבועות.
+ כך למשל בתרשים הבא, המתאר נקודת מבט שמתחילה מהעמודה האחרונה בפריים הראשון
+ ומסתיימת בעמודה האחרונה של הפריים האחרון:
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename viewpoint_out_graph.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+ציר 
+\begin_inset Formula $y$
+\end_inset
+
+ הוא אינדקס הפריים, וציר 
+\begin_inset Formula $x$
+\end_inset
+
+ הוא מיקומה של כל עמודה לאחר שבוצעו ההזזות.
+ חלקים הסגולים הכהים בכל שורה הם הפריימים לאחר ההזזות, וקו הבהיר הוא ה-
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+viewpoint
+\lang hebrew
+.
+ ניתן לראות שבתחילת הדרך )בשורות העליונות( הקו עובר בתוך הפריימים, אך בהמשך
+ הוא יוצא מהם.
+ הסיבה לכך היא שההזזות יוצרות מנח שאיננו קמור.
+ ממילא, התמונה שמתקבלת תכיל עמודות ריקות רבות, כ:
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Graphics
+	filename viewpoint_out_image.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+על כן בכל התמונות שנראה להלן לא נציג את הפלטים שמתקבלים עבור ההזזות שחישבנו,
+ אלא עבור
+\series bold
+ הזזות בתנועה אחידה
+\series default
+.
+ קבענו אותן להיות הממוצע של ההזזות שחושבו ע"פ ההומוגרפיות.
+ אנו מודעים לעובדה שהפעולה הזו פוגעת בביצועים, אך כדי לענות על תנאי השאלה
+ ראינו זאת כפעולה הכרחית.
+ על מנת לצפות בתוצאות האמת של הקוד שלנו, ניתן להריץ את ה-
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang english
+GUI
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang hebrew
+ 
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+ולהתרשם משיפור האיכות שנובע מהחישובים כאשר לא מניחים תנועה אחידה.
+\end_layout
+
+\begin_layout Standard
+סט ראשון:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename outputs_viewpoint/snow/snow_full_(0, 4, 245, 4).png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename outputs_viewpoint/snow/snow_full_(0, 4, 245, 418).png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename outputs_viewpoint/snow/snow_full_(0, 418, 245, 4).png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+ 
+\begin_inset Graphics
+	filename outputs_viewpoint/snow/snow_full_(0, 418, 245, 418).png
+	lyxscale 50
+	scale 50
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+סט שני:
+\end_layout
+
+\begin_layout Standard
+.
+\end_layout
+
+\end_body
+\end_document
