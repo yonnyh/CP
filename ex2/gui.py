@@ -123,13 +123,16 @@ class ViewPoint:
                 self.convert_to_uint8(output)), int(self.uniform_height * (width / height)),
                 self.uniform_height))
             self.output_label.configure(image=self.output_tk_image)
+            if index == FRAME_INDEX and len(self.tk_images) != 0:
+                self.starting_frame_canvas.create_image((150, 150), image=self.tk_images[int(val)])
+            # if index == COL_INDEX and len(self.tk_images) != 0:
+            #     col = int(val)
+            #     self.starting_frame_canvas.create_line(col, 300, col, 0)
         except ValueError:
             pass
         except AttributeError:
             pass
 
-        if index == FRAME_INDEX and len(self.tk_images) != 0:
-            self.starting_frame_canvas.create_image((150, 150), image=self.tk_images[int(val)])
 
     def update_slider(self, index):
         try:
@@ -150,6 +153,9 @@ class ViewPoint:
 
             if index == FRAME_INDEX and len(self.tk_images) != 0:
                 self.starting_frame_canvas.create_image((150, 150), image=self.tk_images[int(val)])
+            # if index == COL_INDEX and len(self.tk_images) != 0:
+            #     col = int(self.sliders[index].get())
+            #     self.starting_frame_canvas.create_line(col, 300, col, 0, width=2)
         except ValueError:
             pass
         except AttributeError:
@@ -528,7 +534,7 @@ class Focus:
 
 
 if __name__ == '__main__':
-    # view_point = ViewPoint()
-    # view_point.run()
-    focus = Focus()
-    focus.run()
+    view_point = ViewPoint()
+    view_point.run()
+    # focus = Focus()
+    # focus.run()
