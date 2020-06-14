@@ -96,19 +96,22 @@ class ViewPoint:
         # first frame
         tk.Label(new_win, text='Starting frame:').grid(row=2, column=0, sticky='w')
         tk.Entry(new_win, width=6, textvariable=textbox_vars[0], bg='pink').grid(row=2, column=1)
-
+        textbox_vars[0].set(0)
         # first col
         tk.Label(new_win, text='Starting column:').grid(row=2, column=2, sticky='w')
         tk.Entry(new_win, width=6, textvariable=textbox_vars[1], bg='pink').grid(row=2, column=3)
+        textbox_vars[1].set(0)
 
         # last Frame
         tk.Label(new_win, text='Ending frame:').grid(row=4, column=0, sticky='w')
         tk.Entry(new_win, width=6, textvariable=textbox_vars[2], bg='cyan').grid(row=4, column=1)
+        textbox_vars[2].set(self.total_frame - 1)
 
         # last col
         tk.Label(new_win, text='Ending column:').grid(row=4, column=2, sticky='w')
         tk.Entry(new_win, width=6, textvariable=textbox_vars[3], bg='cyan').grid(row=4, column=3)
         tk.Button(new_win, text='Run', command=save_and_close).grid(row=5, column=0, columnspan=3)
+        textbox_vars[3].set(self.total_cols - 1)
 
     def update_text_box(self, val, index):
         self.text_box_vars[index].set(val)
@@ -132,7 +135,6 @@ class ViewPoint:
             pass
         except AttributeError:
             pass
-
 
     def update_slider(self, index):
         try:
