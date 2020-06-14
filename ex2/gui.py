@@ -405,12 +405,16 @@ class Focus:
         if width > max_width:
             old_width = width
             width = max_width
-            height = int(height * width / old_width)
+            height = height * width / old_width
         if height > max_height:
             old_height = height
             height = max_height
-            width = int(width * height / old_height)
-        return image.resize((width, height), Image.ANTIALIAS)
+            width = width * height / old_height
+        if int(width) <= 0:
+            width = 1
+        elif int(height) <= 0:
+            height = 1
+        return image.resize((int(width), int(height)), Image.ANTIALIAS)
 
     def show_result(self, shift_size=0.0, mark=False):
         try:
@@ -536,7 +540,7 @@ class Focus:
 
 
 if __name__ == '__main__':
-    view_point = ViewPoint()
-    view_point.run()
-    # focus = Focus()
-    # focus.run()
+    # view_point = ViewPoint()
+    # view_point.run()
+    focus = Focus()
+    focus.run()
